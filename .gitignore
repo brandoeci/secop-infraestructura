@@ -1,0 +1,16 @@
+# Datos: nunca se versionan. El repo se reproduce corriendo el ETL.
+data/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+.env
+
+# Power BI
+*.pbix.bak
+
+# Lanzador local, no es parte del proyecto
+abrir-claude.bat
