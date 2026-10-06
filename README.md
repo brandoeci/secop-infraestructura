@@ -212,6 +212,7 @@ dinámico por departamento.
 | [`docs/decisiones.md`](docs/decisiones.md) | Las cinco decisiones de modelado con la medición que sustenta cada una |
 | [`docs/calidad-datos.md`](docs/calidad-datos.md) | Los problemas de los datos de origen y cómo se trataron |
 | [`docs/modelo.md`](docs/modelo.md) | El esquema en estrella, las medidas DAX y el RLS |
+| [`docs/pitch.md`](docs/pitch.md) | El proyecto en 60 segundos y las preguntas que suele traer |
 
 ---
 
