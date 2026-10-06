@@ -131,7 +131,43 @@ sucio en lugar de borrarlo sin dejar rastro. Se decide al construir el modelo.
 
 ---
 
-## 5. La cifra del universo se mueve: el dataset se actualiza a diario
+## 5. Fechas incoherentes, y una que rompia la tabla de fechas
+
+Detectado al construir el modelo (`etl/transformar.py`), no en la exploracion inicial.
+
+| Problema | Filas |
+|---|---|
+| El contrato termina **antes de firmarse** | 200 |
+| Duracion negativa (fin antes del inicio) | 36 |
+| Fecha de inicio anterior a la firma | 20 |
+| Fecha de fin en el **anio 0206** | 1 |
+
+### El anio 0206
+
+`CO1.PCCNTR.8725754` (Municipio de Puerto Gaitan, firmado el 2025-12-23) trae la fecha de fin
+en el **anio 0206**. Casi seguro se quiso digitar 2026.
+
+Esa sola fila estiraba la tabla de fechas del modelo a **675.699 filas**, unos 1.850 anios,
+dejandola inservible y engordando el modelo sin motivo.
+
+**No se adivino la fecha ni se borro el contrato.** Las fechas fuera de una ventana plausible
+(2015-2060) no entran a `dim_fecha`, la clave del hecho queda en nulo y la fila queda marcada
+con `fechas_coherentes = False`. `dim_fecha` quedo en 13.879 filas.
+
+La ventana llega hasta 2060 a proposito: **94 contratos terminan despues de 2035** y son
+concesiones de obra a 20 y 30 anios, no errores. Recortar por "parece muy lejano" habria
+borrado contratos legitimos.
+
+### Las 200 que terminan antes de firmarse
+
+No se corrigen, se marcan. Un contrato que termina antes de su firma puede ser un error de
+digitacion o una formalizacion retroactiva; el dato no alcanza para distinguirlo, y afirmar
+cual es seria inventar. La duracion se deja nula cuando saldria negativa: un numero negativo
+de dias no es una duracion corta, es un dato malo, y promediarlo contaminaria la medida.
+
+---
+
+## 6. La cifra del universo se mueve: el dataset se actualiza a diario
 
 El universo se midió en **66.831** contratos y, unos minutos después, la descarga trajo
 **66.875**. Los dos componentes del filtro crecieron (A: 36.276 → 36.317; B: 43.163 → 43.176),

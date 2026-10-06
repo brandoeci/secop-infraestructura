@@ -138,26 +138,51 @@ pesos, 38 millones de veces el p99 de su modalidad. Ver [`calidad-datos.md`](cal
 
 ---
 
-## Pendiente de decidir — `valor_pagado` y la medida `% ejecutado`
+## D4 — La definición de `% ejecutado`
 
-**No decidido. Bloquea la definición de la medida principal del informe.**
+**Decidido el 2026-10-05 al construir el modelo.** Se acota a contratos donde el pago ya es
+exigible (`estado` en `Cerrado` o `Terminado`), y la cobertura del dato se publica como medida
+propia.
 
-`valor_pagado` viene en **0 en el 61,9 %** de los 66.831 contratos del universo, incluido el
-**37,7 % de los que están `terminado`** (5.224 contratos) y el 19,4 % de los `Cerrado`. El
-detalle por estado está en la sección 7 de [`estructura.md`](estructura.md).
+Lo que decidió: medir las dos y comparar.
 
-Un contrato terminado con 0 pagado no es un contrato gratis: es un vacío de reporte de la
-entidad. Por lo tanto `% ejecutado = valor_pagado / valor_del_contrato` calculado sobre todo el
-universo daría un número artificialmente bajo que no describe la realidad.
+| Medida | Resultado |
+|---|---|
+| Sobre los 66.874 contratos confiables | **13,4 %** |
+| Acotada a los 17.814 con `pago_exigible` | **46,8 %** |
 
-Opciones a evaluar cuando se construya el modelo:
+El 13,4 % no describe la realidad: mete contratos aprobados y en ejecución que todavía no
+tenían por qué haber pagado nada. El 46,8 % es la cifra defendible.
 
-1. Acotar la medida a estados donde el pago ya debería estar reportado (`Cerrado`, `terminado`)
-   y mostrar aparte cuántos contratos se excluyen y por qué.
-2. Contrastar contra `valor_facturado` y `valor_pendiente_de_pago` (por eso los dos están entre
-   las 20 columnas) para ver si alguno está mejor diligenciado.
-3. Publicar la cobertura del dato como hallazgo propio del informe: *qué porcentaje del gasto de
-   infraestructura no tiene ejecución reportada* es, en sí mismo, un resultado interesante.
+Y como el vacío de reporte es en sí mismo un resultado interesante, se añade una medida
+`% sin ejecución reportada`: qué porcentaje de los contratos ya terminados reporta cero pagado.
+Son 5.234 de 13.885 contratos `Terminado`. Eso es un hallazgo del informe, no un defecto que
+haya que esconder.
 
-La opción 3 es la más honesta y probablemente la más interesante para una entrevista, pero
-requiere medir primero. Se decide al construir el modelo, no antes.
+El DAX de las dos medidas está en [`modelo.md`](modelo.md).
+
+---
+
+## D5 — Qué hacer con el registro corrupto
+
+**Decidido el 2026-10-05: marcar, no borrar.**
+
+`CO1.PCCNTR.5972834` se queda en el hecho con `valor_confiable = False`. Todas las medidas de
+dinero filtran por esa bandera, así que no contamina ninguna suma, pero sigue visible en la
+página de atípicos.
+
+Borrarlo habría sido más simple y habría dado el mismo total. Se descartó porque una fila que
+desaparece del modelo no deja rastro de que existió: el informe describe cómo se reporta el
+gasto público, y un registro con 6,45 cuatrillones de pesos **es** parte de cómo se reporta.
+Marcarlo también demuestra que se detectó y se diagnosticó, en lugar de hacerlo desaparecer.
+
+La misma bandera se aplica a `fechas_coherentes` (200 filas) y `pagado_excede` (43).
+
+---
+
+## Pendiente de decidir — cruce con la red vial de INVÍAS
+
+La dimensión `territorial_vial` todavía no está construida. El dataset `ie7y-asdn` (715 filas
+por 18 columnas) tiene `Territorial` y `Departamento`, pero hay que definir por dónde se une
+con los contratos: el departamento de la entidad contratante no es necesariamente el
+departamento donde está la vía. Se decide al construirla.

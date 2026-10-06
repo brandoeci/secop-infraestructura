@@ -1,0 +1,4 @@
+# Dependencias del ETL. Probado con Python 3.12.
+requests>=2.31
+pandas>=2.2
+pyarrow>=15.0
