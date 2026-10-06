@@ -1,13 +1,5 @@
+/// Un supervisor regional solo ve los contratos de las entidades de su departamento. Dinamico por USERPRINCIPALNAME contra mapa_usuarios. Probar con Modelado -> Ver como -> Otro usuario: supervisor.antioquia@ejemplo.gov.co
 role 'Supervisor regional'
-	/// Un supervisor regional solo ve los contratos de las entidades de su
-	/// departamento. El filtro se define en dim_entidad y se propaga al hecho
-	/// por la relacion uno a muchos.
-	///
-	/// Es dinamico: resuelve el departamento con el correo del usuario conectado.
-	/// Un rol por departamento serian 34 roles que habria que mantener a mano.
-	///
-	/// Para probarlo en Desktop: Modelado -> Ver como -> "Supervisor regional" +
-	/// "Otro usuario", y escriba supervisor.antioquia@ejemplo.gov.co
 	modelPermission: read
 
 	tablePermission dim_entidad = dim_entidad[departamento] = LOOKUPVALUE ( mapa_usuarios[departamento], mapa_usuarios[correo], USERPRINCIPALNAME () )

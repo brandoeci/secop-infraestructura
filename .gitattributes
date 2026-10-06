@@ -1,0 +1,6 @@
+# Power BI exige LF en los archivos del proyecto: con CRLF el parser de TMDL falla.
+*.tmdl text eol=lf
+*.pbip text eol=lf
+*.pbism text eol=lf
+*.pbir text eol=lf
+.platform text eol=lf
