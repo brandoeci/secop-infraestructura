@@ -22,6 +22,23 @@ python etl/transformar.py
 
 Modelo completo: ~12 MB. Por eso Power BI no se conecta a la API: lee esto.
 
+El proyecto de Power BI está en `powerbi/` como **PBIP** (modelo semántico en TMDL, versionable
+en git). Ver [`../powerbi/README.md`](../powerbi/README.md).
+
+### Los tipos del Parquet no son los que pandas elige
+
+`etl/transformar.py` fuerza un esquema Arrow explícito al escribir, en vez de dejar que pandas
+decida. No es cosmético:
+
+- pandas 3 escribe los textos como **`large_string`** (LargeUtf8), y el conector Parquet de
+  Power Query **no lee ese tipo**: la carga falla. Se fuerza `string`.
+- Los enteros estrechos (`int8`, `int16`) se amplían a `int32`. Son tipos innecesariamente
+  exóticos para el conector y no ahorran nada a esta escala.
+- Las fechas sin componente de hora se escriben como `date32`, que llega a Power BI como Fecha
+  y no como Fecha y hora.
+
+Si algún día falla la carga en Power BI, ese es el primer sitio donde mirar.
+
 ---
 
 ## Hecho `contratos`

@@ -1,0 +1,29 @@
+table dim_estado
+	lineageTag: 381536b0-4039-40ea-98cb-9d799dd257db
+
+	column estado_key
+		dataType: int64
+		lineageTag: 823886bc-ba56-46c0-9081-20c2ee2acea9
+		isHidden
+		summarizeBy: none
+		sourceColumn: estado_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column estado
+		dataType: string
+		lineageTag: 20e7720c-ac6a-4217-bab3-e0f0301f83e3
+		summarizeBy: none
+		sourceColumn: estado
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_estado = m
+		mode: import
+		source =
+				let
+				    Origen = Parquet.Document(File.Contents(RutaCurated & "\dim_estado.parquet"))
+				in
+				    Origen
+
+	annotation PBI_ResultType = Table

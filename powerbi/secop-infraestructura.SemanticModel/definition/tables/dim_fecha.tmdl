@@ -1,0 +1,96 @@
+table dim_fecha
+	dataCategory: Time
+	lineageTag: 6e49eeda-e2d2-4384-b299-be32f2dfba1a
+
+	column fecha_key
+		dataType: int64
+		lineageTag: f08d431b-54fa-4c4a-b124-722f25f91176
+		isHidden
+		summarizeBy: none
+		sourceColumn: fecha_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column fecha
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: cd568849-020a-438d-8478-c0c0ba5b4bf6
+		isKey
+		summarizeBy: none
+		sourceColumn: fecha
+
+		annotation SummarizationSetBy = Automatic
+		annotation UnderlyingDateTimeDataType = Date
+
+	column anio
+		dataType: int64
+		formatString: 0
+		lineageTag: f3543e0c-67ba-44bf-ae2b-91ac4b3ac53e
+		summarizeBy: none
+		sourceColumn: anio
+
+		annotation SummarizationSetBy = Automatic
+
+	column trimestre
+		dataType: int64
+		formatString: 0
+		lineageTag: 586e8763-01da-4e33-96a9-0e1c17ec31cc
+		summarizeBy: none
+		sourceColumn: trimestre
+
+		annotation SummarizationSetBy = Automatic
+
+	column mes
+		dataType: int64
+		formatString: 0
+		lineageTag: daee1cee-1311-430b-8ba1-d7980b0289a4
+		isHidden
+		summarizeBy: none
+		sourceColumn: mes
+
+		annotation SummarizationSetBy = Automatic
+
+	column dia
+		dataType: int64
+		formatString: 0
+		lineageTag: 8d2eb92e-01e7-4e9a-9f6f-8b4f74a89e64
+		isHidden
+		summarizeBy: none
+		sourceColumn: dia
+
+		annotation SummarizationSetBy = Automatic
+
+	column nombre_mes
+		dataType: string
+		lineageTag: 9b1310c5-5287-4354-bed0-4d194f6308dd
+		summarizeBy: none
+		sourceColumn: nombre_mes
+		sortByColumn: mes
+
+		annotation SummarizationSetBy = Automatic
+
+	column anio_mes
+		dataType: string
+		lineageTag: 9cb1fc75-f82c-4581-9973-4891f237483b
+		summarizeBy: none
+		sourceColumn: anio_mes
+
+		annotation SummarizationSetBy = Automatic
+
+	column anio_trimestre
+		dataType: string
+		lineageTag: 9f0b8ad6-d58c-4822-8a2c-ccccaa9cfdf2
+		summarizeBy: none
+		sourceColumn: anio_trimestre
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_fecha = m
+		mode: import
+		source =
+				let
+				    Origen = Parquet.Document(File.Contents(RutaCurated & "\dim_fecha.parquet"))
+				in
+				    Origen
+
+	annotation PBI_ResultType = Table

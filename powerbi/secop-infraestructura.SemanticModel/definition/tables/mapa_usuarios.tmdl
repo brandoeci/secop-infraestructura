@@ -1,0 +1,40 @@
+table mapa_usuarios
+	/// Tabla puente del RLS: correo del supervisor -> departamento que puede ver.
+	/// Las filas son de EJEMPLO. En produccion esto viene de un origen real
+	/// (Entra ID, un Excel en SharePoint, una tabla de la organizacion).
+	/// Se mantiene oculta: no es una dimension del informe.
+	isHidden
+	lineageTag: cf111c3a-f1a9-49f8-b660-c61e68ca7644
+
+	column correo
+		dataType: string
+		lineageTag: 63c9f082-573f-4b07-8dbd-242232ede6a1
+		summarizeBy: none
+		sourceColumn: correo
+
+		annotation SummarizationSetBy = Automatic
+
+	column departamento
+		dataType: string
+		lineageTag: 2a892e2c-9b9f-46a3-b0e4-de4fa56ff0cb
+		summarizeBy: none
+		sourceColumn: departamento
+
+		annotation SummarizationSetBy = Automatic
+
+	partition mapa_usuarios = m
+		mode: import
+		source =
+				let
+				    Origen = #table(
+				        type table [correo = text, departamento = text],
+				        {
+				            {"supervisor.antioquia@ejemplo.gov.co", "Antioquia"},
+				            {"supervisor.magdalena@ejemplo.gov.co", "Magdalena"},
+				            {"supervisor.bogota@ejemplo.gov.co", "Distrito Capital de Bogotá"}
+				        }
+				    )
+				in
+				    Origen
+
+	annotation PBI_ResultType = Table

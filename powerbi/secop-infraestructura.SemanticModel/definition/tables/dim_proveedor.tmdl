@@ -1,0 +1,54 @@
+table dim_proveedor
+	lineageTag: 472dd81a-2c5c-4c00-abf9-4064f77a99ee
+
+	column proveedor_key
+		dataType: int64
+		lineageTag: 492b631f-5e23-41a4-93a3-96d986153828
+		isHidden
+		summarizeBy: none
+		sourceColumn: proveedor_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column documento
+		dataType: string
+		lineageTag: 13781123-44fa-4b8b-90ea-34739cbdc85a
+		summarizeBy: none
+		sourceColumn: documento
+
+		annotation SummarizationSetBy = Automatic
+
+	column proveedor
+		dataType: string
+		lineageTag: 63d2da5b-753a-4572-aa02-c4e736fe63f0
+		summarizeBy: none
+		sourceColumn: proveedor
+
+		annotation SummarizationSetBy = Automatic
+
+	column tiene_documento
+		dataType: boolean
+		lineageTag: 8e536b48-ad8e-4579-908a-ed8becbd3f84
+		summarizeBy: none
+		sourceColumn: tiene_documento
+
+		annotation SummarizationSetBy = Automatic
+
+	column contratos
+		dataType: int64
+		formatString: #,0
+		lineageTag: 15e7b96b-b26b-4323-bd42-43e4cabd03ce
+		summarizeBy: none
+		sourceColumn: contratos
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_proveedor = m
+		mode: import
+		source =
+				let
+				    Origen = Parquet.Document(File.Contents(RutaCurated & "\dim_proveedor.parquet"))
+				in
+				    Origen
+
+	annotation PBI_ResultType = Table

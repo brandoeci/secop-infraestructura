@@ -1,0 +1,29 @@
+table dim_categoria
+	lineageTag: 69db0efd-fe3a-4022-8df6-dfa22608b25e
+
+	column categoria_key
+		dataType: int64
+		lineageTag: af727e0c-3fc9-4c38-bda4-eb6329a83de0
+		isHidden
+		summarizeBy: none
+		sourceColumn: categoria_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column categoria
+		dataType: string
+		lineageTag: 1a5128a8-fa4e-4179-8149-08f8ebefe43d
+		summarizeBy: none
+		sourceColumn: categoria
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_categoria = m
+		mode: import
+		source =
+				let
+				    Origen = Parquet.Document(File.Contents(RutaCurated & "\dim_categoria.parquet"))
+				in
+				    Origen
+
+	annotation PBI_ResultType = Table

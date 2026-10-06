@@ -1,0 +1,301 @@
+table hecho_contratos
+	lineageTag: edc0068e-577f-4118-92df-b47849d5f6b5
+
+	/// Numero de contratos en el contexto actual.
+	measure 'Contratos' =
+			COUNTROWS ( hecho_contratos )
+		formatString: #,0
+		lineageTag: ee6382a2-3aec-40df-9ce0-fde37ea6bbfb
+
+	/// Excluye el registro con valor no confiable. Ver docs/calidad-datos.md.
+	measure 'Valor contratado' =
+			CALCULATE (
+			    SUM ( hecho_contratos[valor_contratado] ),
+			    hecho_contratos[valor_confiable] = TRUE ()
+			)
+		formatString: #,0
+		lineageTag: eae1f909-9985-4796-bc92-426fbbea9268
+
+	/// Excluye el registro con valor no confiable.
+	measure 'Valor pagado' =
+			CALCULATE (
+			    SUM ( hecho_contratos[valor_pagado] ),
+			    hecho_contratos[valor_confiable] = TRUE ()
+			)
+		formatString: #,0
+		lineageTag: 00f75c98-30ec-4175-b621-f467cb693830
+
+	/// Acotada a contratos ya terminados (pago_exigible). Sobre todo el universo daria 13,4 %, que no describe la realidad porque mezcla contratos que todavia no tenian por que haber pagado nada. Decision D4.
+	measure '% ejecutado' =
+			VAR Contratado =
+			    CALCULATE (
+			        SUM ( hecho_contratos[valor_contratado] ),
+			        hecho_contratos[valor_confiable] = TRUE (),
+			        hecho_contratos[pago_exigible] = TRUE ()
+			    )
+			VAR Pagado =
+			    CALCULATE (
+			        SUM ( hecho_contratos[valor_pagado] ),
+			        hecho_contratos[valor_confiable] = TRUE (),
+			        hecho_contratos[pago_exigible] = TRUE ()
+			    )
+			RETURN
+			    DIVIDE ( Pagado, Contratado )
+		formatString: 0.0%
+		lineageTag: afec5df7-5d6c-40f2-80bb-01b80642ae24
+
+	/// Que porcentaje de los contratos ya terminados reporta cero pagado. Es un hallazgo del informe, no un defecto que haya que esconder.
+	measure '% sin ejecucion reportada' =
+			VAR Terminados =
+			    CALCULATE (
+			        COUNTROWS ( hecho_contratos ),
+			        hecho_contratos[pago_exigible] = TRUE ()
+			    )
+			VAR SinReporte =
+			    CALCULATE (
+			        COUNTROWS ( hecho_contratos ),
+			        hecho_contratos[pago_exigible] = TRUE (),
+			        hecho_contratos[valor_pagado] = 0
+			    )
+			RETURN
+			    DIVIDE ( SinReporte, Terminados )
+		formatString: 0.0%
+		lineageTag: e8755dde-84d5-41d3-b1f1-b8026ec13352
+
+	/// El universo arranca el 2023-10-05, asi que 2023 es un anio parcial y su comparacion contra 2022 no existe.
+	measure 'Valor contratado anio anterior' =
+			CALCULATE ( [Valor contratado], SAMEPERIODLASTYEAR ( dim_fecha[fecha] ) )
+		formatString: #,0
+		lineageTag: c26b9349-4c5e-4dcb-8234-e5aa43fa8683
+
+	/// Variacion del valor contratado frente al mismo periodo del anio anterior.
+	measure 'Variacion anual %' =
+			DIVIDE (
+			    [Valor contratado] - [Valor contratado anio anterior],
+			    [Valor contratado anio anterior]
+			)
+		formatString: 0.0%
+		lineageTag: 40235707-65b8-4aca-8e0e-802bd5ba6a40
+
+	/// Posicion de la entidad por valor contratado.
+	measure 'Ranking entidad' =
+			IF (
+			    ISINSCOPE ( dim_entidad[nombre_entidad] ),
+			    RANKX (
+			        ALLSELECTED ( dim_entidad[nombre_entidad] ),
+			        [Valor contratado],
+			        ,
+			        DESC,
+			        DENSE
+			    )
+			)
+		formatString: #,0
+		lineageTag: fc5208c7-1694-48fc-9075-b790f30f1ec8
+
+	/// Contratos que superan en mas de 10 veces el p99 de su propia modalidad de contratacion. Se compara contra la modalidad y no contra el universo porque la modalidad refleja un rango de cuantia definido por ley. Decision D3.
+	measure 'Contratos atipicos' =
+			CALCULATE (
+			    COUNTROWS ( hecho_contratos ),
+			    hecho_contratos[veces_p99_modalidad] > 10
+			)
+		formatString: #,0
+		lineageTag: 5b93fe62-7e61-4bbf-8477-5b697f842b3a
+
+	/// Nula en 2.619 contratos: 2.583 sin fecha de inicio y 36 donde la resta saldria negativa.
+	measure 'Duracion promedio dias' =
+			AVERAGE ( hecho_contratos[duracion_dias] )
+		formatString: #,0
+		lineageTag: e8d53e5e-91bc-459c-b3fa-07a508491ff4
+
+	column id_contrato
+		dataType: string
+		lineageTag: 1a77b07f-a134-4fc7-8eab-6aa52573f45f
+		summarizeBy: none
+		sourceColumn: id_contrato
+
+		annotation SummarizationSetBy = Automatic
+
+	column entidad_key
+		dataType: int64
+		lineageTag: 13158963-36e7-4319-8623-e13aa4d2f798
+		isHidden
+		summarizeBy: none
+		sourceColumn: entidad_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column proveedor_key
+		dataType: int64
+		lineageTag: 559cd9b7-ccd1-4602-9962-d16908d7be75
+		isHidden
+		summarizeBy: none
+		sourceColumn: proveedor_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column tipo_contrato_key
+		dataType: int64
+		lineageTag: 9496084b-8b7b-4a7f-8e2b-fa61666c04c6
+		isHidden
+		summarizeBy: none
+		sourceColumn: tipo_contrato_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column estado_key
+		dataType: int64
+		lineageTag: 9ff67459-d72d-4fd3-ad10-c8e01446cfa2
+		isHidden
+		summarizeBy: none
+		sourceColumn: estado_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column modalidad_key
+		dataType: int64
+		lineageTag: 240a1bf3-3fea-44a6-935e-8bd1f160218d
+		isHidden
+		summarizeBy: none
+		sourceColumn: modalidad_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column categoria_key
+		dataType: int64
+		lineageTag: 3e714a14-0646-4467-8f5a-832823df4bf1
+		isHidden
+		summarizeBy: none
+		sourceColumn: categoria_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column fecha_firma_key
+		dataType: int64
+		lineageTag: a643208e-39b5-4c50-9767-453eab68699c
+		isHidden
+		summarizeBy: none
+		sourceColumn: fecha_firma_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column fecha_inicio_key
+		dataType: int64
+		lineageTag: 258bf1f0-0390-4d69-aa08-6b087bdcdd44
+		isHidden
+		summarizeBy: none
+		sourceColumn: fecha_inicio_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column fecha_fin_key
+		dataType: int64
+		lineageTag: d0e8ebbf-746b-4fe9-b165-0ea41b96640c
+		isHidden
+		summarizeBy: none
+		sourceColumn: fecha_fin_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column valor_contratado
+		dataType: double
+		formatString: #,0
+		lineageTag: f58601e0-2263-4576-872f-6bca4eab950a
+		summarizeBy: sum
+		sourceColumn: valor_contratado
+
+		annotation SummarizationSetBy = Automatic
+
+	column valor_pagado
+		dataType: double
+		formatString: #,0
+		lineageTag: 1f7e7957-24c1-4339-822b-612cba3f0e85
+		summarizeBy: sum
+		sourceColumn: valor_pagado
+
+		annotation SummarizationSetBy = Automatic
+
+	column valor_facturado
+		dataType: double
+		formatString: #,0
+		lineageTag: c936845b-3504-44ed-bbc7-1a7a909b94c6
+		summarizeBy: sum
+		sourceColumn: valor_facturado
+
+		annotation SummarizationSetBy = Automatic
+
+	column valor_pendiente
+		dataType: double
+		formatString: #,0
+		lineageTag: 43445887-fc2f-49b6-b307-321e37d69fbb
+		summarizeBy: sum
+		sourceColumn: valor_pendiente
+
+		annotation SummarizationSetBy = Automatic
+
+	column objeto_del_contrato
+		dataType: string
+		lineageTag: b245d4a4-5563-466f-a4ea-90453bac9357
+		summarizeBy: none
+		sourceColumn: objeto_del_contrato
+
+		annotation SummarizationSetBy = Automatic
+
+	column valor_confiable
+		dataType: boolean
+		lineageTag: d41cc21c-1b46-4d56-8bc6-0d3db70f1141
+		summarizeBy: none
+		sourceColumn: valor_confiable
+
+		annotation SummarizationSetBy = Automatic
+
+	column veces_p99_modalidad
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 109a4086-9dc2-44b6-a9c5-a0b60a3cac6c
+		summarizeBy: none
+		sourceColumn: veces_p99_modalidad
+
+		annotation SummarizationSetBy = Automatic
+
+	column pago_exigible
+		dataType: boolean
+		lineageTag: ea0a18d4-3464-46d1-86b0-cda46ea664b2
+		summarizeBy: none
+		sourceColumn: pago_exigible
+
+		annotation SummarizationSetBy = Automatic
+
+	column pagado_excede
+		dataType: boolean
+		lineageTag: a7461461-7391-471d-9409-cec7886a849a
+		summarizeBy: none
+		sourceColumn: pagado_excede
+
+		annotation SummarizationSetBy = Automatic
+
+	column fechas_coherentes
+		dataType: boolean
+		lineageTag: f31f5e99-3051-4426-b34e-41f10dd379e4
+		summarizeBy: none
+		sourceColumn: fechas_coherentes
+
+		annotation SummarizationSetBy = Automatic
+
+	column duracion_dias
+		dataType: int64
+		formatString: #,0
+		lineageTag: 5aeb274d-aa8c-4b13-958b-15db8b95e5dd
+		summarizeBy: none
+		sourceColumn: duracion_dias
+
+		annotation SummarizationSetBy = Automatic
+
+	partition hecho_contratos = m
+		mode: import
+		source =
+				let
+				    Origen = Parquet.Document(File.Contents(RutaCurated & "\hecho_contratos.parquet"))
+				in
+				    Origen
+
+	annotation PBI_ResultType = Table

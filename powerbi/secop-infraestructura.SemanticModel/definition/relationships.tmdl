@@ -1,0 +1,37 @@
+relationship 57a39fd0-0417-4e51-bd7d-d0c9fb650562
+	fromColumn: hecho_contratos.entidad_key
+	toColumn: dim_entidad.entidad_key
+
+relationship 75ee93bf-d0e2-4f82-a429-99f63f96b888
+	fromColumn: hecho_contratos.proveedor_key
+	toColumn: dim_proveedor.proveedor_key
+
+relationship 0eded3a0-632b-4a75-b2bc-bf74f63315cd
+	fromColumn: hecho_contratos.tipo_contrato_key
+	toColumn: dim_tipo_contrato.tipo_contrato_key
+
+relationship 8e135833-b60a-475b-987b-4ccef75a20ca
+	fromColumn: hecho_contratos.estado_key
+	toColumn: dim_estado.estado_key
+
+relationship 78d516f7-9c45-4264-b0d7-3c1f760ce292
+	fromColumn: hecho_contratos.modalidad_key
+	toColumn: dim_modalidad.modalidad_key
+
+relationship 6f206968-8d17-4425-be69-af5b8ceb333e
+	fromColumn: hecho_contratos.categoria_key
+	toColumn: dim_categoria.categoria_key
+
+relationship cac970c6-5ff8-48c2-8a2c-caa4fb8f8649
+	fromColumn: hecho_contratos.fecha_firma_key
+	toColumn: dim_fecha.fecha_key
+
+relationship da55cf29-594e-4d58-961e-825a99418d96
+	isActive: false
+	fromColumn: hecho_contratos.fecha_inicio_key
+	toColumn: dim_fecha.fecha_key
+
+relationship 2cfed0b5-d4f4-45e6-8bef-6ab6e49208eb
+	isActive: false
+	fromColumn: hecho_contratos.fecha_fin_key
+	toColumn: dim_fecha.fecha_key

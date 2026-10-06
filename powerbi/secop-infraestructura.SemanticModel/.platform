@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "secop-infraestructura"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "649887f0-835d-4973-bd64-a02c074bde0f"
+  }
+}

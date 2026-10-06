@@ -1,0 +1,29 @@
+table dim_modalidad
+	lineageTag: 94ea5264-b6a5-4dba-9c67-e36b52cdd735
+
+	column modalidad_key
+		dataType: int64
+		lineageTag: c84cd79c-6e39-45ae-b8b5-8d7acdf98805
+		isHidden
+		summarizeBy: none
+		sourceColumn: modalidad_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column modalidad
+		dataType: string
+		lineageTag: e2a97cce-a22e-41ad-b981-88fa511d3260
+		summarizeBy: none
+		sourceColumn: modalidad
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_modalidad = m
+		mode: import
+		source =
+				let
+				    Origen = Parquet.Document(File.Contents(RutaCurated & "\dim_modalidad.parquet"))
+				in
+				    Origen
+
+	annotation PBI_ResultType = Table

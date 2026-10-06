@@ -1,0 +1,12 @@
+/// Carpeta donde el ETL dejo los Parquet, es decir <repo>/data/curated.
+///
+/// Hay que ajustarla a su ruta la primera vez:
+///   Inicio -> Transformar datos -> Administrar parametros -> RutaCurated
+///
+/// No se deja la ruta absoluta de la maquina donde se genero el modelo: en un
+/// repositorio publico eso filtra el nombre de usuario del sistema, y un modelo
+/// que solo carga en una maquina es un modelo roto.
+expression RutaCurated = "C:\ruta\al\repo\secop-infraestructura\data\curated" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 3f8c1e54-9a27-4b61-88d5-7c0e2a4f91bd
+
+	annotation PBI_ResultType = Text

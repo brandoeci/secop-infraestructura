@@ -1,0 +1,70 @@
+table dim_entidad
+	lineageTag: edd37f5d-4ca8-4bc6-be3a-049ed8f9290f
+
+	column entidad_key
+		dataType: int64
+		lineageTag: 049189dd-9ff8-4f35-8879-fa4be2f5f7fb
+		isHidden
+		summarizeBy: none
+		sourceColumn: entidad_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column nit_entidad
+		dataType: string
+		lineageTag: 9c388bcb-eef8-4082-8ca9-f06b3bc6e879
+		summarizeBy: none
+		sourceColumn: nit_entidad
+
+		annotation SummarizationSetBy = Automatic
+
+	column nombre_entidad
+		dataType: string
+		lineageTag: cd83a0d7-27df-4b3f-a734-1a5af591fca3
+		summarizeBy: none
+		sourceColumn: nombre_entidad
+
+		annotation SummarizationSetBy = Automatic
+
+	column departamento
+		dataType: string
+		lineageTag: d5d686a7-5c9f-4ed4-be09-f66b15c3292f
+		summarizeBy: none
+		sourceColumn: departamento
+
+		annotation SummarizationSetBy = Automatic
+
+	column ciudad
+		dataType: string
+		lineageTag: fefe8422-4e58-4380-9e58-de96da1920bd
+		summarizeBy: none
+		sourceColumn: ciudad
+
+		annotation SummarizationSetBy = Automatic
+
+	column orden
+		dataType: string
+		lineageTag: 1f64b774-db75-4a53-a628-b3ef0e79e4d9
+		summarizeBy: none
+		sourceColumn: orden
+
+		annotation SummarizationSetBy = Automatic
+
+	column contratos
+		dataType: int64
+		formatString: #,0
+		lineageTag: 03cb0749-122b-4deb-9eee-1edde57dbf79
+		summarizeBy: none
+		sourceColumn: contratos
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_entidad = m
+		mode: import
+		source =
+				let
+				    Origen = Parquet.Document(File.Contents(RutaCurated & "\dim_entidad.parquet"))
+				in
+				    Origen
+
+	annotation PBI_ResultType = Table

@@ -19,6 +19,8 @@ import unicodedata
 from pathlib import Path
 
 import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
 
 CRUDO = Path("data/raw/obra.ndjson")
 SALIDA = Path("data/curated")
@@ -326,9 +328,44 @@ def construir(crudo: Path, salida: Path) -> None:
     print("-" * 42)
     for nombre, t in tablas.items():
         ruta = salida / f"{nombre}.parquet"
-        t.to_parquet(ruta, index=False, compression="snappy")
+        escribir_parquet(t, ruta)
         print(f"{nombre:22} {len(t):>9,} {ruta.stat().st_size/1e6:>7.2f}")
     print(f"\nescrito en {salida}/")
+
+
+def tipo_seguro(serie: pd.Series) -> pa.DataType:
+    """Tipo Arrow que Power Query sabe leer.
+
+    No se deja que pandas elija. Dos motivos concretos:
+
+    - pandas 3 escribe los textos como `large_string` (LargeUtf8) y
+      `Parquet.Document` de Power Query no soporta ese tipo: la carga falla.
+      Se fuerza `string`.
+    - Los enteros estrechos (int8, int16) se amplian a int32. Son tipos
+      innecesariamente exoticos para el conector y no ahorran nada a esta
+      escala.
+
+    Las fechas sin componente de hora se escriben como `date32`, que llega a
+    Power BI como Fecha en lugar de Fecha y hora.
+    """
+    d = serie.dtype
+    if pd.api.types.is_bool_dtype(d):
+        return pa.bool_()
+    if pd.api.types.is_datetime64_any_dtype(d):
+        solo_dias = serie.dropna().dt.normalize().eq(serie.dropna()).all()
+        return pa.date32() if solo_dias else pa.timestamp("ms")
+    if pd.api.types.is_integer_dtype(d):
+        return pa.int32() if d.itemsize <= 4 else pa.int64()
+    if pd.api.types.is_float_dtype(d):
+        return pa.float64()
+    return pa.string()
+
+
+def escribir_parquet(df: pd.DataFrame, ruta: Path) -> None:
+    """Escribe con un esquema explicito y en una version que el conector lee."""
+    esquema = pa.schema([(c, tipo_seguro(df[c])) for c in df.columns])
+    tabla = pa.Table.from_pandas(df, schema=esquema, preserve_index=False)
+    pq.write_table(tabla, ruta, compression="snappy", version="2.4")
 
 
 def validar(h: pd.DataFrame, tablas: dict, fec: pd.DataFrame) -> None:

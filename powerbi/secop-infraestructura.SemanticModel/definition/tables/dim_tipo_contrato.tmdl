@@ -1,0 +1,29 @@
+table dim_tipo_contrato
+	lineageTag: 0a743ac1-a5ea-499c-9635-788c12b5d9bb
+
+	column tipo_contrato_key
+		dataType: int64
+		lineageTag: c462440a-4200-4ad8-9de7-998b4c2b3ba1
+		isHidden
+		summarizeBy: none
+		sourceColumn: tipo_contrato_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column tipo_contrato
+		dataType: string
+		lineageTag: 8596bd1c-53f1-4bc4-b2c1-f0e79ac8285d
+		summarizeBy: none
+		sourceColumn: tipo_contrato
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_tipo_contrato = m
+		mode: import
+		source =
+				let
+				    Origen = Parquet.Document(File.Contents(RutaCurated & "\dim_tipo_contrato.parquet"))
+				in
+				    Origen
+
+	annotation PBI_ResultType = Table

@@ -1,0 +1,22 @@
+model Model
+	culture: es-ES
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: es-ES
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+	annotation PBI_QueryOrder = ["hecho_contratos", "dim_fecha", "dim_entidad", "dim_proveedor", "dim_tipo_contrato", "dim_estado", "dim_modalidad", "dim_categoria", "mapa_usuarios"]
+
+ref table hecho_contratos
+ref table dim_fecha
+ref table dim_entidad
+ref table dim_proveedor
+ref table dim_tipo_contrato
+ref table dim_estado
+ref table dim_modalidad
+ref table dim_categoria
+ref table mapa_usuarios
+
+ref role 'Supervisor regional'

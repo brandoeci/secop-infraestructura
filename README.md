@@ -221,7 +221,7 @@ dinámico por departamento.
 etl/            descarga, exploración y transformación
 data/raw/       NDJSON crudo          (no versionado)
 data/curated/   Parquet para Power BI (no versionado)
-powerbi/        el .pbix
+powerbi/        el proyecto de Power BI en formato PBIP
 docs/           decisiones y notas técnicas
 ```
 
@@ -229,17 +229,31 @@ Los datos no se versionan. El repositorio se clona y se reproduce corriendo el E
 
 ---
 
+## El proyecto de Power BI
+
+En `powerbi/` está el modelo como **PBIP**, no como `.pbix`. El PBIP guarda el modelo semántico
+en **TMDL**, que es texto: se versiona en git, se revisa en un diff y se puede leer en GitHub.
+Un `.pbix` es un binario que no deja ver nada de esto.
+
+El modelo trae las 8 tablas tipadas, las 9 relaciones (con las de fecha de inicio y fin
+inactivas), `dim_fecha` marcada como tabla de fechas, 10 medidas DAX y el rol de RLS dinámico.
+
+Instrucciones de apertura y verificación en [`powerbi/README.md`](powerbi/README.md).
+
+---
+
 ## Estado
 
-Hecho: la descarga, la exploración, las decisiones de modelado y el ETL al esquema en estrella.
+Hecho: la descarga, la exploración, las decisiones de modelado, el ETL al esquema en estrella y
+el modelo semántico de Power BI.
 
 Pendiente:
 
-- El **`.pbix`**: cargar las ocho tablas, marcar `dim_fecha` como tabla de fechas, crear las
-  medidas y el rol de RLS.
+- Los **visuales del informe**. El modelo está listo; la página viene en blanco.
 - El **cruce con la red vial de INVÍAS** para la dimensión `territorial_vial`. Falta definir
   por dónde se une: el departamento de la entidad contratante no es necesariamente el
   departamento donde está la vía.
+- Publicar el informe y poner el enlace y las capturas en este README.
 
 ---
 
