@@ -127,6 +127,17 @@ documentado para poder defenderlo.
 
 ---
 
+## D3 — Umbral de contratos atípicos
+
+**Decidido el 2026-10-05 al validar la descarga.**
+
+El atípico se mide contra el percentil 99 de **su propia `modalidad_de_contratacion`**, no
+contra el del universo completo, porque la modalidad refleja un rango de cuantía definido por
+ley. La regla salió de un caso real: un contrato de *mínima cuantía* por 6,45 cuatrillones de
+pesos, 38 millones de veces el p99 de su modalidad. Ver [`calidad-datos.md`](calidad-datos.md).
+
+---
+
 ## Pendiente de decidir — `valor_pagado` y la medida `% ejecutado`
 
 **No decidido. Bloquea la definición de la medida principal del informe.**

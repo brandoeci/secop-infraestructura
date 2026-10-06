@@ -77,7 +77,17 @@ def main() -> None:
         return
 
     cols = esquema()
-    print(f"columnas en el esquema: {len(cols)}")
+    # Si el archivo se bajo con $select, solo trae un subconjunto de las 95.
+    # Perfilar las ausentes las marcaria como "100% nulas", que es falso: no
+    # estan vacias, no se pidieron.
+    presentes = set().union(*(f.keys() for f in filas)) if filas else set()
+    recortado = [c for c in cols if c["api"] in presentes]
+    if len(recortado) < len(cols):
+        print(f"archivo con $select: {len(recortado)} de las {len(cols)} columnas "
+              f"del esquema. Se perfilan solo esas.")
+        cols = recortado
+    else:
+        print(f"columnas en el esquema: {len(cols)}")
     tipos = Counter(c["tipo"] for c in cols)
     print("tipos:", dict(tipos), "\n")
 

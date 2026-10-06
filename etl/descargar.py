@@ -42,6 +42,57 @@ PAGINA_POR_DEFECTO = 1000
 MAX_INTENTOS = 5
 TIEMPO_ESPERA = 120
 
+# --- Universo de obra e infraestructura (decision D1, ver docs/decisiones.md) ---
+#
+# El filtro vive aqui y no en la linea de comandos a proposito. Lleva tildes
+# ('Interventoria', 'Asociacion Publico Privada' van acentuadas) y la consola
+# de Windows puede mutilarlas al pasarlas como argumento: el filtro no
+# coincidiria con nada y la API devolveria menos filas sin dar ningun error.
+# En el archivo fuente, que es UTF-8, eso no puede pasar, y de paso el
+# universo queda reproducible con un solo comando.
+
+TIPOS_OBRA = ("Obra", "Interventoría", "Consultoría", "Concesión",
+              "Asociación Público Privada")
+
+# Familia UNSPSC de construccion y mantenimiento de instalaciones.
+UNSPSC_OBRA = "V1.72"
+
+# Ultimos 3 anios contados desde el dia en que se decidio el alcance.
+# Es una fecha fija, no "hoy menos 3 anios": asi la cifra de filas es
+# reproducible y comparable entre corridas.
+DESDE = "2023-10-05T00:00:00"
+
+# Las 20 columnas de la decision D2.
+COLUMNAS_OBRA = (
+    # clave del hecho
+    "id_contrato",
+    # dimension entidad
+    "nit_entidad", "nombre_entidad", "departamento", "ciudad", "orden",
+    # dimension proveedor
+    "documento_proveedor", "proveedor_adjudicado",
+    # dimensiones de clasificacion
+    "tipo_de_contrato", "estado_contrato", "modalidad_de_contratacion",
+    "codigo_de_categoria_principal",
+    # atributo degenerado
+    "objeto_del_contrato",
+    # fechas
+    "fecha_de_firma", "fecha_de_inicio_del_contrato", "fecha_de_fin_del_contrato",
+    # medidas
+    "valor_del_contrato", "valor_pagado", "valor_facturado",
+    "valor_pendiente_de_pago",
+)
+
+
+def universo_obra() -> tuple[str, str]:
+    """Devuelve el ($select, $where) del universo de obra e infraestructura."""
+    tipos = ", ".join(f"'{t}'" for t in TIPOS_OBRA)
+    where = (
+        f"fecha_de_firma >= '{DESDE}'"
+        f" AND (tipo_de_contrato in ({tipos})"
+        f" OR codigo_de_categoria_principal like '{UNSPSC_OBRA}%')"
+    )
+    return ", ".join(COLUMNAS_OBRA), where
+
 
 def sesion() -> requests.Session:
     """Sesion HTTP reutilizada: una sola conexion TCP para todas las paginas."""
@@ -203,12 +254,26 @@ def main() -> None:
                    help="borra lo descargado y empieza de cero")
     p.add_argument("--contar", action="store_true",
                    help="solo cuenta filas en el servidor y sale")
+    p.add_argument("--universo", choices=["obra"], default=None,
+                   help="usa un filtro predefinido en vez de --select/--where; "
+                        "'obra' = los 66.831 contratos de infraestructura (D1+D2)")
     a = p.parse_args()
 
+    select, where, filas = a.select, a.where, a.filas
+    if a.universo == "obra":
+        if a.select or a.where:
+            raise SystemExit("--universo ya define el select y el where; "
+                             "no lo combine con --select ni --where.")
+        select, where = universo_obra()
+        if filas == 10000:  # el usuario no toco --filas: se quiere el universo entero
+            filas = 0
+        if a.salida == Path("data/raw/muestra_10k.ndjson"):
+            a.salida = Path("data/raw/obra.ndjson")
+
     if a.contar:
-        print(f"{contar(sesion(), a.where):,}")
+        print(f"{contar(sesion(), where):,}")
         return
-    descargar(a.filas, a.pagina, a.select, a.where, a.salida, a.reiniciar)
+    descargar(filas, a.pagina, select, where, a.salida, a.reiniciar)
 
 
 if __name__ == "__main__":
