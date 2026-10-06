@@ -14,3 +14,6 @@ venv/
 
 # Lanzador local, no es parte del proyecto
 abrir-claude.bat
+
+# Notas de contexto privadas: se quedan en la maquina, no en el repo
+CLAUDE.md
