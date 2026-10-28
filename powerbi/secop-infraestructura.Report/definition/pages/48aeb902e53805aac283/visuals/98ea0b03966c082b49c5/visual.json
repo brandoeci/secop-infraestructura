@@ -4,10 +4,10 @@
   "position": {
     "x": 1210,
     "y": 0,
-    "z": 1,
+    "z": 1000,
     "height": 557.5,
     "width": 1350,
-    "tabOrder": 1
+    "tabOrder": 1000
   },
   "visual": {
     "visualType": "clusteredBarChart",
@@ -189,20 +189,6 @@
             }
           ]
         }
-      },
-      {
-        "name": "ebd7bf61e0a6ab09609c",
-        "field": {
-          "Measure": {
-            "Expression": {
-              "SourceRef": {
-                "Entity": "hecho_contratos"
-              }
-            },
-            "Property": "Valor contratado"
-          }
-        },
-        "type": "Advanced"
       }
     ]
   }

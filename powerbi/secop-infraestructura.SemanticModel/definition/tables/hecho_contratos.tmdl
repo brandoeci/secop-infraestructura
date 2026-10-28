@@ -104,6 +104,16 @@ table hecho_contratos
 		formatString: #,0
 		lineageTag: e8d53e5e-91bc-459c-b3fa-07a508491ff4
 
+	measure 'Valor contratado sin filtrar' = SUM ( hecho_contratos[valor_contratado] )
+		lineageTag: 99660e6d-f148-4a6d-871f-1a98522c9c74
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Veces p99' = MAX ( hecho_contratos[veces_p99_modalidad] )
+		lineageTag: 28a3b4d2-2c58-4ebc-82ef-ae464f90ef4f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
 	column id_contrato
 		dataType: string
 		lineageTag: 1a77b07f-a134-4fc7-8eab-6aa52573f45f

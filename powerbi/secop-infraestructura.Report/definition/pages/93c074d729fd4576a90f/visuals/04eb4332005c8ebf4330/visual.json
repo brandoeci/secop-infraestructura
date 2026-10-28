@@ -4,10 +4,10 @@
   "position": {
     "x": 1245.1612903225807,
     "y": 317.741935483871,
-    "z": 5000,
+    "z": 2000,
     "height": 174.19354838709677,
     "width": 258.06451612903226,
-    "tabOrder": 5000
+    "tabOrder": 2000
   },
   "visual": {
     "visualType": "slicer",
@@ -90,23 +90,5 @@
       ]
     },
     "drillFilterOtherVisuals": true
-  },
-  "filterConfig": {
-    "filters": [
-      {
-        "name": "5a307c8660401b4e489b",
-        "field": {
-          "Column": {
-            "Expression": {
-              "SourceRef": {
-                "Entity": "dim_fecha"
-              }
-            },
-            "Property": "anio"
-          }
-        },
-        "type": "Advanced"
-      }
-    ]
   }
 }

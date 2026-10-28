@@ -1,0 +1,256 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "538172a45e9a95a3e65c",
+  "position": {
+    "x": 0,
+    "y": 0,
+    "z": 0,
+    "height": 698.33333333333337,
+    "width": 1656.6666666666667,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "hecho_contratos"
+                    }
+                  },
+                  "Property": "id_contrato"
+                }
+              },
+              "queryRef": "hecho_contratos.id_contrato",
+              "nativeQueryRef": "id_contrato"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_modalidad"
+                    }
+                  },
+                  "Property": "modalidad"
+                }
+              },
+              "queryRef": "dim_modalidad.modalidad",
+              "nativeQueryRef": "modalidad"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_entidad"
+                    }
+                  },
+                  "Property": "nombre_entidad"
+                }
+              },
+              "queryRef": "dim_entidad.nombre_entidad",
+              "nativeQueryRef": "nombre_entidad"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "hecho_contratos"
+                    }
+                  },
+                  "Property": "Valor contratado"
+                }
+              },
+              "queryRef": "hecho_contratos.Valor contratado",
+              "nativeQueryRef": "Valor contratado"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "hecho_contratos"
+                    }
+                  },
+                  "Property": "veces_p99_modalidad"
+                }
+              },
+              "queryRef": "hecho_contratos.veces_p99_modalidad",
+              "nativeQueryRef": "veces_p99_modalidad"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "hecho_contratos"
+                    }
+                  },
+                  "Property": "valor_confiable"
+                }
+              },
+              "queryRef": "hecho_contratos.valor_confiable",
+              "nativeQueryRef": "valor_confiable"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "hecho_contratos"
+                    }
+                  },
+                  "Property": "Valor contratado sin filtrar"
+                }
+              },
+              "queryRef": "hecho_contratos.Valor contratado sin filtrar",
+              "nativeQueryRef": "Valor contratado sin filtrar"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "hecho_contratos"
+                  }
+                },
+                "Property": "veces_p99_modalidad"
+              }
+            },
+            "direction": "Descending"
+          }
+        ]
+      }
+    },
+    "objects": {
+      "columnHeaders": [
+        {
+          "properties": {
+            "columnAdjustment": {
+              "expr": {
+                "Literal": {
+                  "Value": "'fitToContent'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "7cfe2b861ab770a76edb",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "dim_modalidad"
+              }
+            },
+            "Property": "modalidad"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "427209620d114b0cb7b3",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "dim_entidad"
+              }
+            },
+            "Property": "nombre_entidad"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "ea23220fac89ad899e22",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "hecho_contratos"
+              }
+            },
+            "Property": "Valor contratado"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "da4f08390953d0d6850c",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "hecho_contratos"
+              }
+            },
+            "Property": "veces_p99_modalidad"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "15460259dc38ea0b0047",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "hecho_contratos"
+              }
+            },
+            "Property": "valor_confiable"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "388e5039312044c8eac1",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "hecho_contratos"
+              }
+            },
+            "Property": "id_contrato"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "a7183ccd80784ad55b00",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "hecho_contratos"
+              }
+            },
+            "Property": "Valor contratado sin filtrar"
+          }
+        },
+        "type": "Advanced"
+      }
+    ]
+  }
+}

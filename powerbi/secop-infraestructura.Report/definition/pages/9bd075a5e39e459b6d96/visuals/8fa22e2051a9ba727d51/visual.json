@@ -4,10 +4,10 @@
   "position": {
     "x": 10,
     "y": 405,
-    "z": 1,
+    "z": 1000,
     "height": 140,
     "width": 238.33333333333334,
-    "tabOrder": 1
+    "tabOrder": 1000
   },
   "visual": {
     "visualType": "cardVisual",
@@ -52,23 +52,5 @@
       }
     },
     "drillFilterOtherVisuals": true
-  },
-  "filterConfig": {
-    "filters": [
-      {
-        "name": "41b45604daddd45180d1",
-        "field": {
-          "Measure": {
-            "Expression": {
-              "SourceRef": {
-                "Entity": "hecho_contratos"
-              }
-            },
-            "Property": "% sin ejecucion reportada"
-          }
-        },
-        "type": "Advanced"
-      }
-    ]
   }
 }
