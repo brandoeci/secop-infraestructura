@@ -1,0 +1,235 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "40a651e3aa5c75d737a8",
+  "position": {
+    "x": 0,
+    "y": 0,
+    "z": 0,
+    "height": 873.23943661971839,
+    "width": 1209.8591549295775,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_entidad"
+                    }
+                  },
+                  "Property": "nombre_entidad"
+                }
+              },
+              "queryRef": "dim_entidad.nombre_entidad",
+              "nativeQueryRef": "nombre_entidad"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_entidad"
+                    }
+                  },
+                  "Property": "departamento"
+                }
+              },
+              "queryRef": "dim_entidad.departamento",
+              "nativeQueryRef": "departamento"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "hecho_contratos"
+                    }
+                  },
+                  "Property": "Contratos"
+                }
+              },
+              "queryRef": "hecho_contratos.Contratos",
+              "nativeQueryRef": "Contratos"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "hecho_contratos"
+                    }
+                  },
+                  "Property": "Valor contratado"
+                }
+              },
+              "queryRef": "hecho_contratos.Valor contratado",
+              "nativeQueryRef": "Valor contratado"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "hecho_contratos"
+                    }
+                  },
+                  "Property": "Valor pagado"
+                }
+              },
+              "queryRef": "hecho_contratos.Valor pagado",
+              "nativeQueryRef": "Valor pagado"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "hecho_contratos"
+                    }
+                  },
+                  "Property": "% ejecutado"
+                }
+              },
+              "queryRef": "hecho_contratos.% ejecutado",
+              "nativeQueryRef": "% ejecutado"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "hecho_contratos"
+                  }
+                },
+                "Property": "Valor contratado"
+              }
+            },
+            "direction": "Descending"
+          }
+        ]
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'La tabla de entidades'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "76ae6344786072e55100",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "dim_entidad"
+              }
+            },
+            "Property": "nombre_entidad"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "bb5d8d837e66ab98b328",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "dim_entidad"
+              }
+            },
+            "Property": "departamento"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "bef7a1cf0dd4b8b44551",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "hecho_contratos"
+              }
+            },
+            "Property": "Contratos"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "3d3dcbde03524ed84907",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "hecho_contratos"
+              }
+            },
+            "Property": "Valor contratado"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "69cdf0e60393e01cee9a",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "hecho_contratos"
+              }
+            },
+            "Property": "Valor pagado"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "e51642da5492857e00dc",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "hecho_contratos"
+              }
+            },
+            "Property": "% ejecutado"
+          }
+        },
+        "type": "Advanced"
+      }
+    ]
+  }
+}
