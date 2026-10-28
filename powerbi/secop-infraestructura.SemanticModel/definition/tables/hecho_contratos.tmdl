@@ -2,8 +2,7 @@ table hecho_contratos
 	lineageTag: edc0068e-577f-4118-92df-b47849d5f6b5
 
 	/// Numero de contratos en el contexto actual.
-	measure 'Contratos' =
-			COUNTROWS ( hecho_contratos )
+	measure Contratos = COUNTROWS ( hecho_contratos )
 		formatString: #,0
 		lineageTag: ee6382a2-3aec-40df-9ce0-fde37ea6bbfb
 
@@ -63,8 +62,7 @@ table hecho_contratos
 		lineageTag: e8755dde-84d5-41d3-b1f1-b8026ec13352
 
 	/// El universo arranca el 2023-10-05, asi que 2023 es un anio parcial y su comparacion contra 2022 no existe.
-	measure 'Valor contratado anio anterior' =
-			CALCULATE ( [Valor contratado], SAMEPERIODLASTYEAR ( dim_fecha[fecha] ) )
+	measure 'Valor contratado anio anterior' = CALCULATE ( [Valor contratado], SAMEPERIODLASTYEAR ( dim_fecha[fecha] ) )
 		formatString: #,0
 		lineageTag: c26b9349-4c5e-4dcb-8234-e5aa43fa8683
 
@@ -102,8 +100,7 @@ table hecho_contratos
 		lineageTag: 5b93fe62-7e61-4bbf-8477-5b697f842b3a
 
 	/// Nula en 2.619 contratos: 2.583 sin fecha de inicio y 36 donde la resta saldria negativa.
-	measure 'Duracion promedio dias' =
-			AVERAGE ( hecho_contratos[duracion_dias] )
+	measure 'Duracion promedio dias' = AVERAGE ( hecho_contratos[duracion_dias] )
 		formatString: #,0
 		lineageTag: e8d53e5e-91bc-459c-b3fa-07a508491ff4
 
@@ -117,8 +114,8 @@ table hecho_contratos
 
 	column entidad_key
 		dataType: int64
-		lineageTag: 13158963-36e7-4319-8623-e13aa4d2f798
 		isHidden
+		lineageTag: 13158963-36e7-4319-8623-e13aa4d2f798
 		summarizeBy: none
 		sourceColumn: entidad_key
 
@@ -126,8 +123,8 @@ table hecho_contratos
 
 	column proveedor_key
 		dataType: int64
-		lineageTag: 559cd9b7-ccd1-4602-9962-d16908d7be75
 		isHidden
+		lineageTag: 559cd9b7-ccd1-4602-9962-d16908d7be75
 		summarizeBy: none
 		sourceColumn: proveedor_key
 
@@ -135,8 +132,8 @@ table hecho_contratos
 
 	column tipo_contrato_key
 		dataType: int64
-		lineageTag: 9496084b-8b7b-4a7f-8e2b-fa61666c04c6
 		isHidden
+		lineageTag: 9496084b-8b7b-4a7f-8e2b-fa61666c04c6
 		summarizeBy: none
 		sourceColumn: tipo_contrato_key
 
@@ -144,8 +141,8 @@ table hecho_contratos
 
 	column estado_key
 		dataType: int64
-		lineageTag: 9ff67459-d72d-4fd3-ad10-c8e01446cfa2
 		isHidden
+		lineageTag: 9ff67459-d72d-4fd3-ad10-c8e01446cfa2
 		summarizeBy: none
 		sourceColumn: estado_key
 
@@ -153,8 +150,8 @@ table hecho_contratos
 
 	column modalidad_key
 		dataType: int64
-		lineageTag: 240a1bf3-3fea-44a6-935e-8bd1f160218d
 		isHidden
+		lineageTag: 240a1bf3-3fea-44a6-935e-8bd1f160218d
 		summarizeBy: none
 		sourceColumn: modalidad_key
 
@@ -162,8 +159,8 @@ table hecho_contratos
 
 	column categoria_key
 		dataType: int64
-		lineageTag: 3e714a14-0646-4467-8f5a-832823df4bf1
 		isHidden
+		lineageTag: 3e714a14-0646-4467-8f5a-832823df4bf1
 		summarizeBy: none
 		sourceColumn: categoria_key
 
@@ -171,8 +168,8 @@ table hecho_contratos
 
 	column fecha_firma_key
 		dataType: int64
-		lineageTag: a643208e-39b5-4c50-9767-453eab68699c
 		isHidden
+		lineageTag: a643208e-39b5-4c50-9767-453eab68699c
 		summarizeBy: none
 		sourceColumn: fecha_firma_key
 
@@ -180,8 +177,8 @@ table hecho_contratos
 
 	column fecha_inicio_key
 		dataType: int64
-		lineageTag: 258bf1f0-0390-4d69-aa08-6b087bdcdd44
 		isHidden
+		lineageTag: 258bf1f0-0390-4d69-aa08-6b087bdcdd44
 		summarizeBy: none
 		sourceColumn: fecha_inicio_key
 
@@ -189,8 +186,8 @@ table hecho_contratos
 
 	column fecha_fin_key
 		dataType: int64
-		lineageTag: d0e8ebbf-746b-4fe9-b165-0ea41b96640c
 		isHidden
+		lineageTag: d0e8ebbf-746b-4fe9-b165-0ea41b96640c
 		summarizeBy: none
 		sourceColumn: fecha_fin_key
 
@@ -299,3 +296,4 @@ table hecho_contratos
 				    Origen
 
 	annotation PBI_ResultType = Table
+

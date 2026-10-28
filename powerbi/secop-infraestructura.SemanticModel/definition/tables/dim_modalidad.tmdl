@@ -3,8 +3,8 @@ table dim_modalidad
 
 	column modalidad_key
 		dataType: int64
-		lineageTag: c84cd79c-6e39-45ae-b8b5-8d7acdf98805
 		isHidden
+		lineageTag: c84cd79c-6e39-45ae-b8b5-8d7acdf98805
 		summarizeBy: none
 		sourceColumn: modalidad_key
 
@@ -27,3 +27,4 @@ table dim_modalidad
 				    Origen
 
 	annotation PBI_ResultType = Table
+

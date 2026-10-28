@@ -1,11 +1,11 @@
 table dim_fecha
-	dataCategory: Time
 	lineageTag: 6e49eeda-e2d2-4384-b299-be32f2dfba1a
+	dataCategory: Time
 
 	column fecha_key
 		dataType: int64
-		lineageTag: f08d431b-54fa-4c4a-b124-722f25f91176
 		isHidden
+		lineageTag: f08d431b-54fa-4c4a-b124-722f25f91176
 		summarizeBy: none
 		sourceColumn: fecha_key
 
@@ -13,13 +13,14 @@ table dim_fecha
 
 	column fecha
 		dataType: dateTime
+		isKey
 		formatString: dd/mm/yyyy
 		lineageTag: cd568849-020a-438d-8478-c0c0ba5b4bf6
-		isKey
 		summarizeBy: none
 		sourceColumn: fecha
 
 		annotation SummarizationSetBy = Automatic
+
 		annotation UnderlyingDateTimeDataType = Date
 
 	column anio
@@ -42,9 +43,9 @@ table dim_fecha
 
 	column mes
 		dataType: int64
+		isHidden
 		formatString: 0
 		lineageTag: daee1cee-1311-430b-8ba1-d7980b0289a4
-		isHidden
 		summarizeBy: none
 		sourceColumn: mes
 
@@ -52,9 +53,9 @@ table dim_fecha
 
 	column dia
 		dataType: int64
+		isHidden
 		formatString: 0
 		lineageTag: 8d2eb92e-01e7-4e9a-9f6f-8b4f74a89e64
-		isHidden
 		summarizeBy: none
 		sourceColumn: dia
 
@@ -94,3 +95,4 @@ table dim_fecha
 				    Origen
 
 	annotation PBI_ResultType = Table
+

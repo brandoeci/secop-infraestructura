@@ -3,8 +3,8 @@ table dim_categoria
 
 	column categoria_key
 		dataType: int64
-		lineageTag: af727e0c-3fc9-4c38-bda4-eb6329a83de0
 		isHidden
+		lineageTag: af727e0c-3fc9-4c38-bda4-eb6329a83de0
 		summarizeBy: none
 		sourceColumn: categoria_key
 
@@ -27,3 +27,4 @@ table dim_categoria
 				    Origen
 
 	annotation PBI_ResultType = Table
+

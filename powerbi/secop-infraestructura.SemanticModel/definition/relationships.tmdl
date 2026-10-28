@@ -35,3 +35,4 @@ relationship 2cfed0b5-d4f4-45e6-8bef-6ab6e49208eb
 	isActive: false
 	fromColumn: hecho_contratos.fecha_fin_key
 	toColumn: dim_fecha.fecha_key
+

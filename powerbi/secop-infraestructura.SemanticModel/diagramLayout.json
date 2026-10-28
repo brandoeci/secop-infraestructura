@@ -1,0 +1,139 @@
+{
+  "version": "1.1.0",
+  "diagrams": [
+    {
+      "ordinal": 0,
+      "scrollPosition": {
+        "x": 156.80000305175781,
+        "y": 94.4000015258789
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 623.75739850537559,
+            "y": 96.589160688658808
+          },
+          "nodeIndex": "dim_categoria",
+          "nodeLineageTag": "69db0efd-fe3a-4022-8df6-dfa22608b25e",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 50,
+            "y": 138.41171037803565
+          },
+          "nodeIndex": "dim_entidad",
+          "nodeLineageTag": "edd37f5d-4ca8-4bc6-be3a-049ed8f9290f",
+          "size": {
+            "height": 248,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 613.77395190658274,
+            "y": 630.50976316452841
+          },
+          "nodeIndex": "dim_estado",
+          "nodeLineageTag": "381536b0-4039-40ea-98cb-9d799dd257db",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 634.91895491674973,
+            "y": 277.43310573534433
+          },
+          "nodeIndex": "dim_fecha",
+          "nodeLineageTag": "6e49eeda-e2d2-4384-b299-be32f2dfba1a",
+          "size": {
+            "height": 296,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 326.68980327069295,
+            "y": 715.33415128372781
+          },
+          "nodeIndex": "dim_modalidad",
+          "nodeLineageTag": "94ea5264-b6a5-4dba-9c67-e36b52cdd735",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 337.02588533029711,
+            "y": -50
+          },
+          "nodeIndex": "dim_proveedor",
+          "nodeLineageTag": "472dd81a-2c5c-4c00-abf9-4064f77a99ee",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 60.858677027325825,
+            "y": 477.55711913755249
+          },
+          "nodeIndex": "dim_tipo_contrato",
+          "nodeLineageTag": "0a743ac1-a5ea-499c-9635-788c12b5d9bb",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 347.93619559445915,
+            "y": 277.67982973025147
+          },
+          "nodeIndex": "hecho_contratos",
+          "nodeLineageTag": "edc0068e-577f-4118-92df-b47849d5f6b5",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 899.91895491674961,
+            "y": 285.6670756418639
+          },
+          "nodeIndex": "mapa_usuarios",
+          "nodeLineageTag": "8b1d4e22-5f03-47a9-9c16-2e7a0d5b3f44",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 0
+        }
+      ],
+      "name": "Todas las tablas",
+      "zoomValue": 100,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    }
+  ],
+  "selectedDiagram": "Todas las tablas",
+  "defaultDiagram": "Todas las tablas"
+}

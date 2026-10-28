@@ -1,8 +1,9 @@
 /// Carpeta donde el ETL dejo los Parquet, es decir <repo>/data/curated.
-///
+/// 
 /// Si clona el repo en otra ruta, ajustela aqui o en:
-///   Inicio -> Transformar datos -> Administrar parametros -> RutaCurated
+/// Inicio -> Transformar datos -> Administrar parametros -> RutaCurated
 expression RutaCurated = "C:\Users\Asus Tuf Gaming\secop-infraestructura\data\curated" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
 	lineageTag: 3f8c1e54-9a27-4b61-88d5-7c0e2a4f91bd
 
 	annotation PBI_ResultType = Text
+

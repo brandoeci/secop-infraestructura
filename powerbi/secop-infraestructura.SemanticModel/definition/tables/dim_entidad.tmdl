@@ -3,8 +3,8 @@ table dim_entidad
 
 	column entidad_key
 		dataType: int64
-		lineageTag: 049189dd-9ff8-4f35-8879-fa4be2f5f7fb
 		isHidden
+		lineageTag: 049189dd-9ff8-4f35-8879-fa4be2f5f7fb
 		summarizeBy: none
 		sourceColumn: entidad_key
 
@@ -68,3 +68,4 @@ table dim_entidad
 				    Origen
 
 	annotation PBI_ResultType = Table
+

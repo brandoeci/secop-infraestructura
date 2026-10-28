@@ -6,3 +6,20 @@ model Model
 	dataAccessOptions
 		legacyRedirects
 		returnErrorValuesAsNull
+
+annotation PBI_QueryOrder = ["dim_categoria","dim_entidad","dim_estado","dim_fecha","dim_modalidad","dim_proveedor","dim_tipo_contrato","hecho_contratos","mapa_usuarios","RutaCurated"]
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table dim_categoria
+ref table dim_entidad
+ref table dim_estado
+ref table dim_fecha
+ref table dim_modalidad
+ref table dim_proveedor
+ref table dim_tipo_contrato
+ref table hecho_contratos
+ref table mapa_usuarios
+
+ref role 'Supervisor regional'
+

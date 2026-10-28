@@ -3,8 +3,8 @@ table dim_proveedor
 
 	column proveedor_key
 		dataType: int64
-		lineageTag: 492b631f-5e23-41a4-93a3-96d986153828
 		isHidden
+		lineageTag: 492b631f-5e23-41a4-93a3-96d986153828
 		summarizeBy: none
 		sourceColumn: proveedor_key
 
@@ -52,3 +52,4 @@ table dim_proveedor
 				    Origen
 
 	annotation PBI_ResultType = Table
+

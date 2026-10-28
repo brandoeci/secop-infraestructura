@@ -35,3 +35,4 @@ table mapa_usuarios
 				    Origen
 
 	annotation PBI_ResultType = Table
+

@@ -3,8 +3,8 @@ table dim_estado
 
 	column estado_key
 		dataType: int64
-		lineageTag: 823886bc-ba56-46c0-9081-20c2ee2acea9
 		isHidden
+		lineageTag: 823886bc-ba56-46c0-9081-20c2ee2acea9
 		summarizeBy: none
 		sourceColumn: estado_key
 
@@ -27,3 +27,4 @@ table dim_estado
 				    Origen
 
 	annotation PBI_ResultType = Table
+

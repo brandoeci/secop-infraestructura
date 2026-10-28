@@ -3,8 +3,8 @@ table dim_tipo_contrato
 
 	column tipo_contrato_key
 		dataType: int64
-		lineageTag: c462440a-4200-4ad8-9de7-998b4c2b3ba1
 		isHidden
+		lineageTag: c462440a-4200-4ad8-9de7-998b4c2b3ba1
 		summarizeBy: none
 		sourceColumn: tipo_contrato_key
 
@@ -27,3 +27,4 @@ table dim_tipo_contrato
 				    Origen
 
 	annotation PBI_ResultType = Table
+

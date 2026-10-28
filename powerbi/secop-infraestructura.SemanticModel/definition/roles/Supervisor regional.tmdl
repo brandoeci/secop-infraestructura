@@ -3,3 +3,6 @@ role 'Supervisor regional'
 	modelPermission: read
 
 	tablePermission dim_entidad = dim_entidad[departamento] = LOOKUPVALUE ( mapa_usuarios[departamento], mapa_usuarios[correo], USERPRINCIPALNAME () )
+
+	annotation PBI_Id = 5aa8bca56634424b820f9275b34d7901
+
