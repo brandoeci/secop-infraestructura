@@ -1,0 +1,107 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "a646b44760b497ab0a3e",
+  "position": {
+    "x": 10,
+    "y": 20,
+    "z": 0,
+    "height": 375,
+    "width": 596.66666666666674,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "clusteredBarChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_estado"
+                    }
+                  },
+                  "Property": "estado"
+                }
+              },
+              "queryRef": "dim_estado.estado",
+              "nativeQueryRef": "estado",
+              "active": true
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "hecho_contratos"
+                    }
+                  },
+                  "Property": "% ejecutado"
+                }
+              },
+              "queryRef": "hecho_contratos.% ejecutado",
+              "nativeQueryRef": "% ejecutado"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "hecho_contratos"
+                  }
+                },
+                "Property": "% ejecutado"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "b37bfdb22098eb3cc796",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "dim_estado"
+              }
+            },
+            "Property": "estado"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "2362626f4c18984ba4e0",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "hecho_contratos"
+              }
+            },
+            "Property": "% ejecutado"
+          }
+        },
+        "type": "Advanced"
+      }
+    ]
+  }
+}

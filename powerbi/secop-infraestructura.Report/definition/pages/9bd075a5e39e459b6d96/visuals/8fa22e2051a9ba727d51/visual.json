@@ -1,0 +1,74 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "8fa22e2051a9ba727d51",
+  "position": {
+    "x": 10,
+    "y": 405,
+    "z": 1,
+    "height": 140,
+    "width": 238.33333333333334,
+    "tabOrder": 1
+  },
+  "visual": {
+    "visualType": "cardVisual",
+    "query": {
+      "queryState": {
+        "Data": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "hecho_contratos"
+                    }
+                  },
+                  "Property": "% sin ejecucion reportada"
+                }
+              },
+              "queryRef": "hecho_contratos.% sin ejecucion reportada",
+              "nativeQueryRef": "% sin ejecucion reportada"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "hecho_contratos"
+                  }
+                },
+                "Property": "% sin ejecucion reportada"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "41b45604daddd45180d1",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "hecho_contratos"
+              }
+            },
+            "Property": "% sin ejecucion reportada"
+          }
+        },
+        "type": "Advanced"
+      }
+    ]
+  }
+}

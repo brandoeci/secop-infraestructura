@@ -1,0 +1,168 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "883df94b0a2cbb07d8a0",
+  "position": {
+    "x": 606.66666666666674,
+    "y": 86.666666666666671,
+    "z": 2,
+    "height": 273.33333333333337,
+    "width": 521.66666666666674,
+    "tabOrder": 2
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_estado"
+                    }
+                  },
+                  "Property": "estado"
+                }
+              },
+              "queryRef": "dim_estado.estado",
+              "nativeQueryRef": "estado"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "hecho_contratos"
+                    }
+                  },
+                  "Property": "Contratos"
+                }
+              },
+              "queryRef": "hecho_contratos.Contratos",
+              "nativeQueryRef": "Contratos"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "hecho_contratos"
+                    }
+                  },
+                  "Property": "Valor contratado"
+                }
+              },
+              "queryRef": "hecho_contratos.Valor contratado",
+              "nativeQueryRef": "Valor contratado"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "hecho_contratos"
+                    }
+                  },
+                  "Property": "Valor pagado"
+                }
+              },
+              "queryRef": "hecho_contratos.Valor pagado",
+              "nativeQueryRef": "Valor pagado"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "hecho_contratos"
+                    }
+                  },
+                  "Property": "% ejecutado"
+                }
+              },
+              "queryRef": "hecho_contratos.% ejecutado",
+              "nativeQueryRef": "% ejecutado"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "ab4b1f06e1030ac1d4db",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "dim_estado"
+              }
+            },
+            "Property": "estado"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "2bc9e7520d075e09b715",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "hecho_contratos"
+              }
+            },
+            "Property": "Contratos"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "66349f492c90a51c0845",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "hecho_contratos"
+              }
+            },
+            "Property": "Valor contratado"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "b561c731a4e4c79bcc90",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "hecho_contratos"
+              }
+            },
+            "Property": "Valor pagado"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "b849cd36731c7b9c9ae7",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "hecho_contratos"
+              }
+            },
+            "Property": "% ejecutado"
+          }
+        },
+        "type": "Advanced"
+      }
+    ]
+  }
+}
