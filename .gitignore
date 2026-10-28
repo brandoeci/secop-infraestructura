@@ -12,6 +12,10 @@ venv/
 # Power BI
 *.pbix.bak
 
+# Cache local de Power BI: rutas de esta maquina y un blob de credenciales
+# cifrado contra este usuario de Windows. No sirve en otra maquina.
+.pbi/
+
 # Lanzador local, no es parte del proyecto
 abrir-claude.bat
 
