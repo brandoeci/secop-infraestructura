@@ -5,8 +5,8 @@
     "x": 10,
     "y": 318,
     "z": 3000,
-    "height": 402,
-    "width": 886,
+    "height": 388,
+    "width": 1154,
     "tabOrder": 3000
   },
   "visual": {
@@ -47,6 +47,20 @@
               },
               "queryRef": "hecho_contratos.Valor pagado",
               "nativeQueryRef": "Valor pagado"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "hecho_contratos"
+                    }
+                  },
+                  "Property": "Valor contratado"
+                }
+              },
+              "queryRef": "hecho_contratos.Valor contratado",
+              "nativeQueryRef": "Valor contratado"
             }
           ]
         }

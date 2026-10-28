@@ -1,20 +1,34 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
-  "name": "a6e42cc24d3c1f61ca49",
+  "name": "9a7c6eeb8c0b4d810d67",
   "position": {
-    "x": 662.39660657476145,
-    "y": 0,
-    "z": 2000,
-    "height": 232.11028632025452,
-    "width": 272.83138918345708,
-    "tabOrder": 2000
+    "x": 11.111111111111111,
+    "y": 60,
+    "z": 5001,
+    "height": 170,
+    "width": 886,
+    "tabOrder": 5001
   },
   "visual": {
-    "visualType": "clusteredColumnChart",
+    "visualType": "cardVisual",
     "query": {
       "queryState": {
-        "Y": {
+        "Data": {
           "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "hecho_contratos"
+                    }
+                  },
+                  "Property": "Valor contratado"
+                }
+              },
+              "queryRef": "hecho_contratos.Valor contratado",
+              "nativeQueryRef": "Valor contratado"
+            },
             {
               "field": {
                 "Measure": {
@@ -28,6 +42,20 @@
               },
               "queryRef": "hecho_contratos.% ejecutado",
               "nativeQueryRef": "% ejecutado"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "hecho_contratos"
+                    }
+                  },
+                  "Property": "Contratos"
+                }
+              },
+              "queryRef": "hecho_contratos.Contratos",
+              "nativeQueryRef": "Contratos"
             }
           ]
         }
@@ -42,7 +70,7 @@
                     "Entity": "hecho_contratos"
                   }
                 },
-                "Property": "% ejecutado"
+                "Property": "Valor contratado"
               }
             },
             "direction": "Descending"
