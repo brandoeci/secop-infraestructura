@@ -18,11 +18,17 @@ el repositorio: si alguien pregunta de dónde sale una, se corre el código.
 > unión de ambos, y lo puedo defender con números en vez de con una corazonada.
 >
 > Con eso armé un **esquema en estrella** —un hecho de sesenta y siete mil contratos y siete
-> dimensiones— en Parquet, que es lo que lee Power BI.
+> dimensiones— con dbt sobre DuckDB, que alimenta un informe de Power BI de cuatro páginas.
 >
 > Y el hallazgo que más me gusta no es de negocio, es de **calidad de datos**: al sumar el valor
 > contratado me daba cuatro veces el PIB del país. Era **un solo registro mal digitado que valía
 > el noventa y ocho por ciento del total**.
+>
+> Lo último que hice fue convertirlo de un script en un **pipeline**: carga incremental con
+> MERGE, y un control de calidad que **bloquea la publicación** si algo falla. Y las dos cosas
+> están probadas, no afirmadas: hay un script que corre el pipeline dos veces y comprueba que la
+> segunda no escribe nada, y otro que **inyecta un registro corrupto a propósito** y verifica
+> que el informe no se actualiza.
 
 Unos 60 segundos. Si hay menos tiempo, los dos primeros párrafos solos funcionan.
 
@@ -102,6 +108,67 @@ no sirve como dimensión sin geocodificar.
 
 ---
 
+### «¿Esto es ingeniería de datos o es un informe?»
+
+Empezó siendo un informe y lo convertí en un pipeline, y sé exactamente cuál era la diferencia,
+porque los tres agujeros eran concretos:
+
+**Uno: las claves subrogadas eran posicionales.** Las asignaba con un `range(1, n+1)` sobre un
+conjunto ordenado. Si el origen traía una entidad nueva que ordenaba en la mitad, se renumeraban
+todas las de después, y la clave de ayer apuntaba a otra entidad hoy. Eso no es un detalle de
+estilo: con claves así **no se puede hacer carga incremental**, no porque falte el MERGE, sino
+porque no hay nada estable contra lo que hacerlo. Ahora la clave sale de un hash de la clave
+natural: determinista, sin estado y estable ante filas nuevas.
+
+**Dos: nada bloqueaba un dato malo.** Había un documento con los problemas de calidad, pero era
+prosa que nadie comprobaba. Ahora son 67 tests de dbt, y la exportación a los Parquet que lee
+Power BI va **después** de los tests: un modelo que no pasa nunca llega al informe.
+
+**Tres: nada lo corría y un fallo era silencioso.** Era `python etl/transformar.py` cuando me
+acordaba. Ahora corre en GitHub Actions, en cada push contra un fixture y en cron semanal contra
+la API, y cada corrida deja una fila en una bitácora con su resultado.
+
+### «¿Cómo sabes que el control de calidad funciona?»
+
+Porque lo rompo a propósito. `etl/probar_gate.py` inyecta en la capa bronze un contrato con el
+mismo perfil del error real y comprueba tres cosas: que `dbt build` falla con código distinto de
+cero, que lo caza el test escrito para eso, y sobre todo que **los Parquet del informe quedan
+byte a byte idénticos**.
+
+Y el test de calidad más importante tuvo **dos versiones malas**, que descubrió el fixture de
+280 filas del CI. La primera medía la concentración como fracción del valor total, y eso depende
+del tamaño del dataset: el contrato más grande pesa 1,55 % sobre el universo completo y 12,54 %
+sobre 280 filas, así que el test saltaba por el tamaño de la muestra. La segunda medía contra el
+p99 de la modalidad, y falló por algo más sutil: en una modalidad con pocos contratos, **el
+registro corrupto entra en el cálculo de su propio p99 y lo infla**, así que la razón vuelve a
+ser cerca de uno y el test no dispara. La versión que funciona mide contra la **mediana**, que es
+robusta: una fila extrema la mueve una posición.
+
+Me gusta contar eso porque el fixture pagó su coste el primer día.
+
+### «¿Y cómo pruebas que es idempotente?»
+
+`etl/probar_idempotencia.py` corre el pipeline dos veces sobre la misma entrada y comprueba que
+el MERGE de la segunda recibe **cero filas** —no que las actualizó con el mismo valor: que no las
+tocó— y que las ocho tablas dan el mismo checksum.
+
+Pero lo que hace que la prueba valga es el **control positivo**: después ensucia a propósito el
+hash de un contrato y verifica que el filtro detecta exactamente ese. Un test que siempre da cero
+no prueba nada; si el filtro estuviera mal escrito y no detectara ningún cambio, el caso normal
+pasaría igual de limpio.
+
+### «¿Por qué dbt y DuckDB, y no Spark o un warehouse?»
+
+La ingesta se quedó en Python porque es paginación HTTP con reanudación: control de flujo, no una
+transformación. De ahí hacia arriba todo es SQL con dbt, porque un esquema en estrella *es* SQL y
+porque dbt trae de fábrica los tests, el linaje y la materialización incremental, que si no hay
+que escribir a mano.
+
+DuckDB porque no es un servidor, es una librería embebida: el repo se clona y se corre sin
+levantar nada. Y la migración la **probé**: comparé la salida de dbt contra la del ETL anterior
+emparejando por clave natural, porque las subrogadas cambiaron a propósito, y dio **cero
+diferencias en las ocho tablas**.
+
 ## Las cifras, por si preguntan
 
 | | |
@@ -118,6 +185,11 @@ no sirve como dimensión sin geocodificar.
 | Contratos terminados sin pago reportado | 5.234 de 13.885 |
 | Tamaño del modelo en Parquet | ~12 MB |
 | Tamaño del dataset completo en crudo | ~26 GB |
+| Tests de calidad sobre el modelo | 67: 63 pasan, 4 avisan |
+| Duración del pipeline completo | ~15 s |
+| Filas que el MERGE toca en una segunda corrida | 0 |
+| El registro corrupto, veces la mediana de su modalidad | 190.693.033× |
+| El contrato legítimo más extremo, por la misma medida | 14.884× |
 
 ---
 

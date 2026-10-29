@@ -1,10 +1,14 @@
 # Contratación de infraestructura en Colombia
 
+[![CI](https://github.com/brandoeci/secop-infraestructura/actions/workflows/ci.yml/badge.svg)](https://github.com/brandoeci/secop-infraestructura/actions/workflows/ci.yml)
+
 Proyecto de datos de punta a punta sobre el gasto público en obra e infraestructura, con datos
 abiertos de **SECOP II**, la plataforma de contratación estatal de Colombia.
 
-ETL en Python sobre un dataset de **6.102.286 contratos** y modelo en estrella listo para
-Power BI.
+**Pipeline medallion** (bronze → silver → gold) sobre un dataset de **6.102.286 contratos**,
+con claves deterministas, carga incremental, control de calidad que bloquea la publicación y
+ejecución automática en GitHub Actions. Ingesta en Python, transformación en **dbt + DuckDB**,
+informe en **Power BI**.
 
 ---
 
@@ -142,39 +146,136 @@ peticiones; si lo tienes, expórtalo como `SOCRATA_APP_TOKEN`.
 ## Arquitectura
 
 ```
-API Socrata  ->  descarga paginada  ->  NDJSON en data/raw/
-                                              |
-                                        transformación
-                                              |
-                                   esquema en estrella en Parquet
-                                        data/curated/
-                                              |
-                                     Power BI (modo Import)
+         API Socrata  jbjy-vk9h  (6,1 M contratos, 95 columnas, diaria)
+                     │
+                     │  etl/descargar.py      paginación reanudable
+                     ▼
+BRONZE   data/bronze/contratos.parquet        crudo fiel al origen, todo texto
+                     │
+                     │  dbt + DuckDB
+                     ▼
+SILVER   stg_contratos                        tipado y limpieza
+         int_contratos_calidad                banderas de calidad
+                     │
+                     ▼
+GOLD     7 dimensiones + hecho_contratos      MERGE incremental
+                     │
+                     │  67 tests  ◄── el gate: si algo rompe, aquí se detiene
+                     │
+                     │  etl/exportar.py       solo si el gate pasó
+                     ▼
+         data/curated/*.parquet  ──────►  Power BI (Import)  ──────►  informe
 ```
 
 Power BI no se conecta a los millones de filas crudas: lee el Parquet ya filtrado, que son
 **~12 MB**.
 
-### Por qué no hay Spark
+El detalle de cada decisión está en **[docs/arquitectura.md](docs/arquitectura.md)**. Las
+cuatro que definen el pipeline:
 
-El universo filtrado son 66.875 filas. A ese volumen un clúster no aporta nada y pandas sobra,
-así que el ETL es pandas. Lo que sí justificaría Spark son los **~26 GB** del dataset completo
-en crudo (extrapolado de 43 MB por 10.000 filas), y ese paso todavía no hace falta. Una
-herramienta puesta sin que el volumen la exija es ruido.
+### 1. Las claves subrogadas son deterministas, no posicionales
+
+La primera versión asignaba las claves con `range(1, n + 1)` sobre un conjunto **ordenado**.
+Parece inofensivo y no lo es: si el origen trae una entidad nueva que ordena en la mitad, se
+renumeran todas las que van después, y el `entidad_key` de ayer apunta a otra entidad hoy. Con
+claves así no hay carga incremental posible, no porque falte el `MERGE`, sino porque no hay
+nada estable contra lo que hacerlo.
+
+Ahora la clave sale de un hash de la clave natural: determinista, sin estado —se clona el repo
+y salen las mismas claves— y estable ante filas nuevas.
+
+### 2. El gate bloquea porque la exportación va después
+
+`dbt build` construye y corre 67 tests. `etl/exportar.py` solo corre si eso salió bien. Un
+modelo que no pasa los tests **nunca llega a `data/curated/`**, así que Power BI se queda
+leyendo el último modelo bueno en vez de refrescar sobre datos malos.
+
+Hoy: **63 pasan, 4 avisan, 0 rompen**. Los cuatro avisos son los defectos del origen ya
+diagnosticados en [docs/calidad-datos.md](docs/calidad-datos.md), no sorpresas.
+
+### 3. pandas en la ingesta, SQL de silver a gold
+
+La ingesta se queda en Python porque es paginación HTTP con reanudación: control de flujo, no
+una transformación. De bronze hacia arriba todo es SQL con dbt, porque un esquema en estrella
+*es* SQL y porque dbt trae de fábrica los tests, el linaje y la materialización incremental.
+
+La migración se **probó**: `etl/comparar_salidas.py` comparó la salida de dbt contra la del ETL
+anterior emparejando por clave natural y dio **0 diferencias en las 8 tablas**.
+
+### 4. Por qué no hay Spark
+
+El universo filtrado son 66.875 filas y pesa 12 MB. A esa escala un clúster no aporta nada: el
+pipeline completo corre en **15 segundos** en un portátil, y `dbt build` solo tarda 3. Montar
+Spark aquí sería más lento, no más rápido.
+
+Lo que sí lo justificaría son los **~26 GB** del dataset completo en crudo, y ese paso todavía
+no hace falta. Poder explicar por qué **no** se usó una herramienta vale más que tenerla de
+adorno.
 
 ---
 
 ## Cómo correrlo
 
 ```bash
+python -m venv .venv
+.venv\Scripts\activate            # Windows
+source .venv/bin/activate         # Linux y macOS
 pip install -r requirements.txt
 
 # 1. Descarga el universo de obra: 66.875 contratos, 20 columnas
 python etl/descargar.py --universo obra
 
-# 2. Construye el esquema en estrella en data/curated/
-python etl/transformar.py
+# 2. Pipeline completo: bronze, silver, gold, 67 tests y exportación
+python etl/correr_pipeline.py
 ```
+
+> **El entorno virtual no es ceremonia.** `dbt-duckdb` trae su propia versión de `pyarrow`, y
+> `pyarrow` es justo la librería que escribe los Parquet que lee Power BI. Instalarlo en el
+> Python del sistema cambiaría esa versión sin avisar y podría romper el informe por un lado que
+> no tiene nada que ver con el cambio que se estaba haciendo.
+
+Los dos pasos se pueden fusionar: `python etl/correr_pipeline.py --descargar`.
+
+El orden de los pasos del pipeline **es** el control de calidad:
+
+```
+aterrizar  ->  dbt build  ->  registrar  ->  exportar
+                   │                            │
+              67 tests                  solo si el gate pasó
+```
+
+El registro en la bitácora corre **pase o falle**, porque una corrida que falló es la que más
+interesa tener anotada.
+
+### Las pruebas
+
+Tres propiedades que sería fácil dar por buenas sin comprobarlas. Las tres tienen un script:
+
+```bash
+# La migración a dbt no cambió ningún dato: 0 diferencias en las 8 tablas
+python etl/comparar_salidas.py
+
+# Correr el pipeline dos veces no cambia nada, y sí detecta un cambio real
+python etl/probar_idempotencia.py
+
+# El control de calidad bloquea de verdad: data/curated/ no se toca si falla
+python etl/probar_gate.py
+```
+
+La de idempotencia tiene un **control positivo**, y es lo que hace que valga: ensucia el hash
+de un contrato y comprueba que el filtro detecta exactamente ese. Un test que siempre da cero
+no prueba nada —si el filtro estuviera mal escrito, el caso normal pasaría igual de limpio.
+
+### Automatización
+
+| Flujo | Cuándo | Qué hace |
+|---|---|---|
+| `ci.yml` | cada push y PR | Pipeline completo contra un fixture de 280 filas, sin red: ruff, los 67 tests, y las pruebas de idempotencia y del gate. Menos de un minuto. |
+| `pipeline.yml` | cron lunes 06:00 UTC, o a mano | Descarga real (incremental con `--desde`) y publica el modelo y la bitácora como artefactos. |
+
+Si el gate falla, el workflow falla y GitHub avisa por correo. Antes esto era
+`python etl/transformar.py` a mano: un fallo era silencioso y no quedaba constancia de ninguna
+corrida.
 
 La descarga es **reanudable**: si se corta, el mismo comando continúa donde quedó. Reanuda
 contando las líneas ya escritas en vez de confiar en un archivo de estado, y recorta una última
@@ -225,7 +326,9 @@ Dos granos que los datos obligaron a decidir:
   propio en el campo, **3.889 proveedores distintos** que usar ese campo como clave habría
   colapsado en una sola fila.
 
-El ETL valida integridad referencial y **falla antes de escribir** si el modelo no es cargable.
+Los 67 tests de dbt validan integridad referencial y reglas de negocio, y **fallan antes de
+exportar** si el modelo no es cargable. El detalle está en
+[docs/arquitectura.md](docs/arquitectura.md).
 
 ### Calidad: marcar en vez de borrar
 
@@ -248,6 +351,7 @@ dinámico por departamento.
 
 | Documento | Contenido |
 |---|---|
+| [`docs/arquitectura.md`](docs/arquitectura.md) | **El pipeline capa por capa, las cuatro decisiones que lo definen y las pruebas que las respaldan** |
 | [`docs/estructura.md`](docs/estructura.md) | Las 95 columnas con tipo, nulos y valores de relleno; los tipos y estados con conteos de la población completa |
 | [`docs/decisiones.md`](docs/decisiones.md) | Las cinco decisiones de modelado con la medición que sustenta cada una |
 | [`docs/calidad-datos.md`](docs/calidad-datos.md) | Los problemas de los datos de origen y cómo se trataron |
@@ -259,14 +363,29 @@ dinámico por departamento.
 ## Estructura
 
 ```
-etl/            descarga, exploración y transformación
-data/raw/       NDJSON crudo          (no versionado)
-data/curated/   Parquet para Power BI (no versionado)
-powerbi/        el proyecto de Power BI en formato PBIP
-docs/           decisiones y notas técnicas
+etl/                 ingesta, orquestación y las tres pruebas
+transformaciones/    el proyecto dbt: modelos, macros y tests
+  models/staging/      silver: tipado y limpieza
+  models/intermedio/   silver: banderas de calidad
+  models/marts/        gold: el esquema en estrella
+  tests/               los controles de calidad con umbral
+.github/workflows/   CI en cada push y pipeline semanal
+tests/fixtures/      muestra de 280 filas para que el CI corra sin red
+powerbi/             el proyecto de Power BI en formato PBIP
+docs/                decisiones y notas técnicas
+data/                todo no versionado
+  raw/                 NDJSON crudo tal como llega de la API
+  bronze/              el crudo en Parquet, fiel al origen
+  warehouse.duckdb     silver y gold
+  curated/             los Parquet que lee Power BI
 ```
 
-Los datos no se versionan. El repositorio se clona y se reproduce corriendo el ETL.
+Los datos no se versionan. El repositorio se clona y se reproduce corriendo el pipeline.
+
+La única excepción es `tests/fixtures/contratos_muestra.ndjson`: 280 filas y 261 KB de datos
+públicos, fuera de `data/`, para que el CI y las pruebas corran sin red. Está muestreado de
+forma estratificada por modalidad, porque al azar las modalidades raras desaparecen y el p99
+por modalidad deja de tener sentido.
 
 ---
 
@@ -293,21 +412,30 @@ Instrucciones de apertura y verificación en [`powerbi/README.md`](powerbi/READM
 
 ## Estado
 
-Hecho de punta a punta: la descarga, la exploración, las decisiones de modelado, el ETL al
-esquema en estrella, el modelo semántico y **las cuatro páginas del informe, publicadas**.
+Hecho de punta a punta: la descarga, la exploración, las decisiones de modelado, el pipeline
+medallion en dbt, el modelo semántico y **las cuatro páginas del informe, publicadas**.
+
+Lo que se cerró en la capa de ingeniería de datos, con la prueba al lado:
+
+| | Prueba |
+|---|---|
+| Claves subrogadas deterministas | `etl/comparar_salidas.py` → 0 diferencias contra el ETL anterior |
+| Carga incremental idempotente | `etl/probar_idempotencia.py` → el `MERGE` recibe 0 filas, y 1 cuando sí hay un cambio |
+| Control de calidad que bloquea | `etl/probar_gate.py` → `data/curated/` queda byte a byte idéntico si falla |
+| Bitácora de corridas | `data/curated/auditoria_corridas.parquet`, una fila por corrida |
+| Ejecución automática | `ci.yml` en cada push, `pipeline.yml` en cron semanal |
 
 Pendiente:
 
 - El **cruce con la red vial de INVÍAS** para la dimensión `territorial_vial`. Falta definir
   por dónde se une: el departamento de la entidad contratante no es necesariamente el
   departamento donde está la vía. Que INVÍAS resulte ser la entidad que más contrata le da
-  sentido al cruce.
-- **Idempotencia**: hoy `transformar.py` reescribe el modelo completo en cada corrida. Lo que
-  corresponde es una clave determinística, un `MERGE` y una prueba de que la segunda corrida
-  no escribe nada.
-- Convertir los controles de [`docs/calidad-datos.md`](docs/calidad-datos.md) en **controles
-  ejecutables** con historial por corrida y una compuerta que detenga el ETL antes de escribir
-  si algo falla. Hoy son prosa.
+  sentido al cruce. Es trabajo de modelado, no de ingeniería.
+- **SCD Type 2** en `dim_entidad`, para conservar historia cuando una unidad cambia de nombre
+  o de departamento. Requiere un registro persistente de claves, que es justo lo que la
+  decisión de usar un hash descartó a propósito: viviría en `data/`, que no se versiona.
+- **Alertas más allá del correo de GitHub.** Power Automate tiene conector nativo para
+  refrescar el dataset de Power BI, que cerraría el ciclo hasta el informe.
 
 ---
 

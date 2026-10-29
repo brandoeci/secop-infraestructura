@@ -93,17 +93,12 @@ prevista en el modelo. En lugar de un umbral inventado, la regla es:
 Es defendible porque la modalidad de contratación refleja un rango de cuantía definido por ley:
 un atípico en mínima cuantía no es lo mismo que un atípico en licitación pública.
 
-### Decisión pendiente
+### Cómo se trató, al final
 
-Cómo tratar `CO1.PCCNTR.5972834` en el informe. Opciones:
-
-1. **Excluirlo del modelo** y documentar la exclusión en el informe. Limpio, pero esconde el
-   problema.
-2. **Dejarlo y marcarlo** con una bandera de "valor no confiable", excluyéndolo de las sumas
-   pero mostrándolo en la página de atípicos. Más trabajo, más honesto.
-
-La 2 es mejor para una entrevista: demuestra que se detectó, se diagnosticó y se trató el dato
-sucio en lugar de borrarlo sin dejar rastro. Se decide al construir el modelo.
+Se eligió **dejarlo y marcarlo** con `valor_confiable = false` (decisión D5), en vez de
+excluirlo del modelo. Excluirlo habría sido más limpio y habría escondido el problema; así el
+contrato aparece en la página de atípicos del informe y queda fuera de las sumas de dinero,
+porque las medidas DAX de valor filtran por esa bandera.
 
 ---
 
@@ -181,6 +176,87 @@ Consecuencias:
   ir con la fecha de la descarga.**
 - `data/raw/obra.ndjson.estado.json` guarda la consulta y el conteo de esa corrida.
 
+---
+
+## 7. Los controles, ya ejecutables
+
+Todo lo anterior era prosa: un diagnóstico escrito que nadie comprobaba en cada corrida. Ahora
+son **67 tests de dbt** que corren con `dbt build`, y la exportación a `data/curated/` va
+**después**, así que un modelo que no los pasa nunca llega a Power BI.
+
+Estado medido el **2026-10-29**: 63 pasan, 4 avisan, 0 rompen.
+
+### Lo que rompe la corrida (`severity: error`)
+
+| Control | Por qué bloquea |
+|---|---|
+| `id_contrato` único y no nulo | Si se duplica, el grano "un contrato" deja de sostenerse y toda suma queda mal |
+| Integridad referencial del hecho a las 7 dimensiones | Una huérfana deja filas invisibles en el informe sin avisar |
+| `entidad_key` y `proveedor_key` no nulos | Son las dos dimensiones por las que el informe pregunta "quién contrata" |
+| [`anio_fuera_de_ventana`](../transformaciones/tests/anio_fuera_de_ventana.sql) | Una fecha fuera de 2015–2060 no es un dato feo, es una tabla de fechas inservible (ver sección 5) |
+| [`valor_fuera_de_escala`](../transformaciones/tests/valor_fuera_de_escala.sql) | Ningún contrato debe superar 100.000× la mediana de su modalidad |
+
+### Lo que avisa y deja pasar (`severity: warn`)
+
+Son los defectos del origen diagnosticados arriba. No son sorpresas: son el estado conocido del
+dato público, y el informe los describe en vez de ocultarlos. El umbral de `error_if` sale de
+medir el estado actual y dejar holgura, así que si el origen se degrada mucho más allá de eso
+la corrida sí se detiene.
+
+| Control | Hoy | Rompe si |
+|---|---|---|
+| [`valor_contratado_no_positivo`](../transformaciones/tests/valor_contratado_no_positivo.sql) | 630 | > 1.000 |
+| [`atipicos_sobre_p99`](../transformaciones/tests/atipicos_sobre_p99.sql) | 27 | > 100 |
+| [`fechas_incoherentes`](../transformaciones/tests/fechas_incoherentes.sql) | 200 | > 500 |
+| [`pagado_excede_contratado`](../transformaciones/tests/pagado_excede_contratado.sql) | 43 | > 200 |
+| `estado` dentro de los 8 valores conocidos | 8 | nunca, solo avisa |
+
+### El control que habría ahorrado el trabajo de la sección 1
+
+`valor_fuera_de_escala` es la regla que **habría atrapado sola** el contrato de 6,45
+cuatrillones. Se tardaron horas en encontrarlo a mano; con este test la corrida se habría
+detenido en la primera.
+
+Sus dos primeras versiones estaban mal, y las dos las descubrió el fixture de 280 filas del CI:
+
+1. **Medirlo como fracción del valor total depende del tamaño del dataset.** El contrato más
+   grande pesa 1,55 % sobre el universo completo y 12,54 % sobre 280 filas: el test saltaba por
+   el tamaño de la muestra, no por un error.
+2. **Medirlo contra el p99 de la modalidad tampoco funciona**, aunque sea la referencia de la
+   sección 3. En una modalidad con pocos contratos, el registro corrupto **entra en el cálculo
+   de su propio p99 y lo infla**: la razón vuelve a ser cerca de 1 y el test no dispara.
+
+La versión que funciona mide contra la **mediana** de la modalidad, que es robusta: una sola
+fila extrema, por grande que sea, la mueve una posición.
+
+| | Veces la mediana de su modalidad |
+|---|---|
+| Contrato legítimo más extremo | 14.884× |
+| Contratos por encima de 100.000× | **0** |
+| `CO1.PCCNTR.5972834` | **190.693.033×** |
+
+Entre lo legítimo y lo imposible hay cuatro órdenes de magnitud, y el umbral de 100.000× cae
+justo en ese hueco: siete veces de holgura sobre el peor caso real y mil novecientas por debajo
+del error que tiene que cazar.
+
+### Que el control bloquea de verdad, probado
+
+```bash
+python etl/probar_gate.py
+```
+
+Inyecta en bronze un contrato con ese mismo perfil y comprueba que `dbt build` falla con código
+distinto de 0, que lo caza `valor_fuera_de_escala`, y sobre todo que **`data/curated/` queda
+byte a byte idéntico**. El registro malo sí entra al gold de DuckDB —es ahí donde el test puede
+verlo— pero no llega a los Parquet del informe.
+
+Verificado a las dos escalas: bloquea con 66.875 filas y con las 280 del fixture.
+
+### La bitácora
+
+Cada corrida deja una fila en `data/curated/auditoria_corridas.parquet` con su resultado
+(PASS / WARNING / FAIL), los tests por estado y las filas en cada capa. Corre **pase o falle**,
+porque una corrida que falló es la que más interesa tener registrada.
 ---
 
 ## Cómo reproducir todo esto

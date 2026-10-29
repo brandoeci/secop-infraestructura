@@ -1,13 +1,23 @@
 # El modelo en estrella
 
-Lo que `etl/transformar.py` escribe en `data/curated/` y lee Power BI en modo Import.
+Lo que el pipeline escribe en `data/curated/` y lee Power BI en modo Import.
 Cifras de la corrida del 2026-10-05 sobre 66.875 contratos.
 
 ```bash
 pip install -r requirements.txt
 python etl/descargar.py --universo obra
-python etl/transformar.py
+python etl/correr_pipeline.py
 ```
+
+> **Las decisiones de grano de este documento siguen vigentes tal cual.** Lo que cambió el
+> 2026-10-29 es quién las ejecuta: el esquema lo construyen ahora los modelos de dbt en
+> `transformaciones/models/marts/`, y no `etl/transformar.py`. La migración se probó comparando
+> las dos salidas por clave natural: **0 diferencias en las 8 tablas**.
+>
+> El único cambio real en el modelo es que **las claves subrogadas son un hash de la clave
+> natural** en vez de un contador posicional, para que una fila nueva no renumere las demás y
+> la carga pueda ser incremental. Las columnas `*_key` del hecho pasaron de `int32` a `int64`,
+> que es lo que el TMDL ya declaraba. Ver [arquitectura.md](arquitectura.md).
 
 | Tabla | Filas | MB |
 |---|---|---|
