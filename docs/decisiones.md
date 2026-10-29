@@ -18,20 +18,30 @@ AND (
 )
 ```
 
-**Resultado verificado: 66.831 contratos.**
+**Resultado verificado: 66.831 contratos** (contados contra la API el 2026-10-05).
 
 ### Por qué la unión y no uno de los dos
 
 Se midieron los dos criterios por separado sobre la población completa antes de decidir:
 
-| Conjunto | Filas |
-|---|---|
-| A — por `tipo_de_contrato` | 36.276 |
-| B — por UNSPSC `V1.72%` | 43.163 |
-| A ∩ B | 12.608 |
-| A ∪ B | **66.831** |
+| Conjunto | Contra la API<br>2026-10-05, mañana | En el universo descargado<br>2026-10-05, 19:17 |
+|---|---|---|
+| A — por `tipo_de_contrato` | 36.276 | 36.317 |
+| B — por UNSPSC `V1.72%` | 43.163 | 43.176 |
+| A ∩ B | 12.608 | 12.618 |
+| A ∪ B | **66.831** | **66.875** |
 
-**Los dos criterios casi no se solapan**: solo 12.608 contratos cumplen ambos, de 66.831. Es
+**Las dos columnas son correctas, y la diferencia entre ellas es el dato interesante.** La
+primera es el conteo que sustentó la decisión; la segunda, el recuento sobre las filas que
+efectivamente se descargaron esa misma tarde. `jbjy-vk9h` **se actualiza a diario**: entre
+una medición y otra entraron 44 contratos nuevos al universo.
+
+De ahí una regla del repositorio: **ninguna cifra se escribe sin la fecha en que se midió**.
+Contra un origen vivo, un número sin fecha no es verificable. Las cifras del `README.md` y de
+`docs/pitch.md` son las de la columna derecha, porque describen el universo que el informe
+realmente contiene.
+
+**Los dos criterios casi no se solapan**: solo 12.618 contratos cumplen ambos, de 66.875. Es
 decir, cada criterio por separado deja fuera entre 23.000 y 30.000 contratos que el otro sí
 encuentra. Usar uno solo no es una simplificación, es perder un tercio del universo.
 

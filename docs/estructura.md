@@ -3,6 +3,11 @@
 Todas las cifras de este documento salieron de correr el código del repo contra la API de
 Socrata el **2026-10-05**. Ninguna está estimada ni copiada del catálogo.
 
+> `jbjy-vk9h` **se actualiza a diario**, así que estas cifras describen el origen ese día y
+> no hoy. El universo que el informe contiene se descargó esa misma tarde y trae 66.875
+> contratos, 44 más que los 66.831 que se contaron por la mañana. Por eso aquí cada número
+> va con fecha: contra un origen vivo, un número sin fecha no es verificable.
+
 Cómo reproducirlo:
 
 ```bash
@@ -193,12 +198,18 @@ palabra, el texto libre mete falsos positivos.
 
 ### El dato que decide: A y B casi no se solapan
 
+Contado contra la API el **2026-10-05 por la mañana**, antes de descargar nada:
+
 | Conjunto | Filas |
 |---|---|
 | A (por tipo) | 36.276 |
 | B (por UNSPSC `V1.72`) | 43.163 |
 | **A ∩ B** | **12.608** |
 | **A ∪ B** | **66.831** |
+
+> El universo descargado esa tarde trae 66.875 contratos: 44 más, porque el origen se
+> actualiza a diario. El recuento sobre lo descargado da A 36.317, B 43.176 y A ∩ B 12.618.
+> Ver `docs/decisiones.md`, D1.
 | En B pero no en A (los que el filtro por tipo pierde) | 30.555 |
 | En A pero no en B (los que el filtro por UNSPSC pierde) | 23.668 |
 
