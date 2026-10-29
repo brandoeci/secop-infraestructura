@@ -16,6 +16,46 @@ salen del patrón.
 
 ---
 
+## El informe
+
+Cuatro páginas, una por pregunta. Las capturas salen del informe publicado.
+
+### Resumen — cuánto y dónde
+
+![Página de resumen del informe](docs/capturas/01-resumen.png)
+
+Las tres cifras de cabecera y la brecha entre lo contratado y lo pagado por departamento.
+Bogotá concentra el 41,8 % del valor contratado.
+
+### Quién contrata
+
+![Página de entidades contratantes](docs/capturas/02-quien-contrata.png)
+
+**INVÍAS es la entidad que más contrata** por valor, con $10,59 billones. Y la plata la mueven
+las regiones: **66,1 % territorial** contra 30,3 % nacional.
+
+### Ejecución
+
+![Página de ejecución](docs/capturas/03-ejecucion.png)
+
+El `% ejecutado` solo se calcula donde el pago es exigible, por eso el gráfico muestra únicamente
+los estados *Cerrado* y *Terminado*. La tarjeta publica lo que normalmente se omite: **el 33,7 %
+del valor con pago exigible no reporta ejecución**.
+
+### Atípicos
+
+![Página de contratos atípicos](docs/capturas/04-atipicos.png)
+
+Los 27 contratos que superan diez veces el percentil 99 de su propia modalidad. Los dos ejes van
+en escala logarítmica porque el rango cubre cinco órdenes de magnitud en valor y casi siete en
+veces el p99.
+
+La primera fila de la tabla es el registro corrupto, y se lee sin explicación: `valor_confiable`
+en `False`, la columna sin filtrar en 6,45 cuatrillones y `Valor contratado` **en blanco**, porque
+todas las medidas de dinero lo excluyen.
+
+---
+
 ## Hallazgos
 
 Todas las cifras salen de correr el código de este repositorio contra la API de datos.gov.co
@@ -237,7 +277,15 @@ en **TMDL**, que es texto: se versiona en git, se revisa en un diff y se puede l
 Un `.pbix` es un binario que no deja ver nada de esto.
 
 El modelo trae las 8 tablas tipadas, las 9 relaciones (con las de fecha de inicio y fin
-inactivas), `dim_fecha` marcada como tabla de fechas, 10 medidas DAX y el rol de RLS dinámico.
+inactivas), `dim_fecha` marcada como tabla de fechas, 12 medidas DAX y el rol de RLS dinámico.
+
+El informe también es texto: en el formato **PBIR** cada página y cada visual van en su propio
+archivo bajo `definition/pages/`, así que un cambio en un visual se lee como el diff de ese
+visual y no como un bloque opaco.
+
+El tema está en `powerbi/tema-secop.json` y va registrado dentro del informe, así que quien
+clone el repositorio lo ve igual. Su paleta de ocho tonos se validó para daltonismo: la peor
+pareja adyacente queda en ΔE 9,1 en visión protan, sobre un mínimo de 8.
 
 Instrucciones de apertura y verificación en [`powerbi/README.md`](powerbi/README.md).
 
@@ -245,16 +293,21 @@ Instrucciones de apertura y verificación en [`powerbi/README.md`](powerbi/READM
 
 ## Estado
 
-Hecho: la descarga, la exploración, las decisiones de modelado, el ETL al esquema en estrella y
-el modelo semántico de Power BI.
+Hecho de punta a punta: la descarga, la exploración, las decisiones de modelado, el ETL al
+esquema en estrella, el modelo semántico y **las cuatro páginas del informe, publicadas**.
 
 Pendiente:
 
-- Los **visuales del informe**. El modelo está listo; la página viene en blanco.
 - El **cruce con la red vial de INVÍAS** para la dimensión `territorial_vial`. Falta definir
   por dónde se une: el departamento de la entidad contratante no es necesariamente el
-  departamento donde está la vía.
-- Publicar el informe y poner el enlace y las capturas en este README.
+  departamento donde está la vía. Que INVÍAS resulte ser la entidad que más contrata le da
+  sentido al cruce.
+- **Idempotencia**: hoy `transformar.py` reescribe el modelo completo en cada corrida. Lo que
+  corresponde es una clave determinística, un `MERGE` y una prueba de que la segunda corrida
+  no escribe nada.
+- Convertir los controles de [`docs/calidad-datos.md`](docs/calidad-datos.md) en **controles
+  ejecutables** con historial por corrida y una compuerta que detenga el ETL antes de escribir
+  si algo falla. Hoy son prosa.
 
 ---
 
