@@ -33,7 +33,7 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import duckdb
@@ -129,7 +129,7 @@ def registrar(proyecto: Path, almacen: Path, salida: Path) -> None:
     fila["git_sha"] = git_sha()
     fila.update({f"filas_{k}": v for k, v in contar_filas(almacen).items()})
     if not fila["ejecutada_en"]:
-        fila["ejecutada_en"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        fila["ejecutada_en"] = datetime.now(UTC).isoformat(timespec="seconds")
 
     con = duckdb.connect(":memory:")
     columnas = ["run_id", "ejecutada_en", "git_sha", "duracion_segundos",

@@ -8,7 +8,10 @@ sources:
       sin esquema y omite las claves nulas: dejar que el lector infiera haria
       que el tipo de una columna dependiera de que filas le tocaron en el lote.
     meta:
-      external_location: "../data/bronze/{name}.parquet"
+      # Configurable para que el CI pueda correr el pipeline completo
+      # contra el fixture de tests/fixtures/ sin tocar la red ni
+      # necesitar los 67 MB del universo.
+      external_location: "{{ env_var('SECOP_BRONZE', '../data/bronze') }}/{name}.parquet"
     tables:
       - name: contratos
         description: >

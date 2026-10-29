@@ -1,0 +1,77 @@
+# Integracion continua: corre en cada push y en cada pull request.
+#
+# No toca la red ni descarga los 67 MB del universo. Corre el pipeline
+# completo contra el fixture de 280 filas de tests/fixtures/, que es
+# suficiente para comprobar lo que esta corrida tiene que comprobar: que los
+# modelos compilan, que los 67 tests se ejecutan, que el pipeline es
+# idempotente y que el control de calidad bloquea de verdad.
+#
+# Ese es el motivo de que el umbral de valor_fuera_de_escala sea una razon
+# contra el p99 de la modalidad y no una fraccion del valor total: una
+# fraccion del total depende de cuantas filas haya, y el mismo test que pasa
+# con 67.000 filas fallaria con 280. Un control que depende del tamano de la
+# muestra no es un control.
+
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  pipeline:
+    name: Pipeline y controles de calidad
+    runs-on: ubuntu-latest
+
+    env:
+      # El pipeline lee el fixture en vez del universo completo.
+      SECOP_BRONZE: ../tests/fixtures/bronze
+      SECOP_DUCKDB: ../data/warehouse.duckdb
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Instalar dependencias
+        run: pip install -r requirements-dev.txt
+
+      - name: Linter
+        run: ruff check etl/
+
+      - name: Aterrizar el fixture en bronze
+        run: python etl/aterrizar.py
+              --crudo tests/fixtures/contratos_muestra.ndjson
+              --salida tests/fixtures/bronze/contratos.parquet
+
+      - name: Construir el modelo y correr los 67 tests
+        working-directory: transformaciones
+        run: dbt build --profiles-dir . --full-refresh
+
+      - name: Exportar a data/curated/
+        run: python etl/exportar.py
+
+      - name: Probar que el pipeline es idempotente
+        run: python etl/probar_idempotencia.py
+
+      - name: Probar que el control de calidad bloquea
+        run: python etl/probar_gate.py
+              --bronze tests/fixtures/bronze/contratos.parquet
+
+      - name: Registrar la corrida
+        if: always()
+        run: python etl/registrar_corrida.py
+
+      - name: Guardar los artefactos de dbt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dbt-target
+          path: |
+            transformaciones/target/run_results.json
+            transformaciones/target/manifest.json
+          retention-days: 14

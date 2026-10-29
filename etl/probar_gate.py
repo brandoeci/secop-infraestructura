@@ -8,7 +8,7 @@ encontro a mano en este dataset (uno de minima cuantia por 6,45 cuatrillones
 de pesos, que explicaba el 98,6 % del valor total) y comprueba tres cosas:
 
   1. `dbt build` termina en error, no en aviso.
-  2. El test que lo caza es concentracion_de_valor, el que se escribio para
+  2. El test que lo caza es valor_fuera_de_escala, el que se escribio para
      esto.
   3. **data/curated/ queda byte a byte identico.** Esto es lo importante: el
      registro malo si entra al gold de DuckDB, porque es ahi donde el test
@@ -37,11 +37,12 @@ import duckdb
 PROYECTO = Path("transformaciones")
 BRONZE = Path("data/bronze/contratos.parquet")
 CURATED = Path("data/curated")
+ALMACEN = Path("data/warehouse.duckdb")
 
 # Mismo perfil que el error real documentado en docs/calidad-datos.md.
 ID_INYECTADO = "CO1.PCCNTR.PRUEBA-GATE"
 VALOR_ABSURDO = "6453840000000000"
-TEST_ESPERADO = "concentracion_de_valor"
+TEST_ESPERADO = "valor_fuera_de_escala"
 
 
 def dbt(proyecto: Path, *args: str) -> tuple[int, str]:
@@ -103,6 +104,7 @@ def main() -> None:
     p.add_argument("--proyecto", type=Path, default=PROYECTO)
     p.add_argument("--bronze", type=Path, default=BRONZE)
     p.add_argument("--curated", type=Path, default=CURATED)
+    p.add_argument("--almacen", type=Path, default=ALMACEN)
     a = p.parse_args()
 
     if not a.bronze.exists():
@@ -145,8 +147,7 @@ def main() -> None:
             fallos.append("data/curated/ cambio aunque el gate fallo: "
                           "Power BI habria cargado datos malos")
 
-        con = duckdb.connect(str(a.proyecto.parent / "data" / "warehouse.duckdb"),
-                             read_only=True)
+        con = duckdb.connect(str(a.almacen), read_only=True)
         en_gold = con.execute(
             "select count(*) from main_gold.hecho_contratos "
             f"where id_contrato = '{ID_INYECTADO}'").fetchone()[0]

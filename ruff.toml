@@ -1,0 +1,15 @@
+# Linter del codigo Python del ETL.
+line-length = 92
+target-version = "py312"
+
+[lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM"]
+
+# El ETL imprime a stdout a proposito: el log de una corrida es parte de lo
+# que el pipeline entrega, no depuracion olvidada.
+ignore = ["E501"]
+
+[lint.per-file-ignores]
+# aterrizar.py importa de descargar.py tras ajustar sys.path, porque la lista
+# de columnas tiene que vivir en un solo sitio. etl/ no es un paquete.
+"etl/aterrizar.py" = ["E402"]

@@ -25,7 +25,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC
 from pathlib import Path
 
 import pandas as pd
@@ -88,7 +88,7 @@ def aterrizar(crudo: Path, salida: Path) -> None:
     # Truncada al segundo: el Parquet se escribe en timestamp('ms') y los
     # microsegundos de pd.Timestamp.now() no caben. La hora de ingesta no
     # necesita esa resolucion.
-    df["_ingestado_en"] = (pd.Timestamp.now(tz=timezone.utc)
+    df["_ingestado_en"] = (pd.Timestamp.now(tz=UTC)
                            .tz_localize(None).floor("s"))
     df["_origen"] = crudo.name
 
