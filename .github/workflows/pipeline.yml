@@ -51,7 +51,7 @@ jobs:
           cache: pip
 
       - name: Instalar dependencias
-        run: "pip install --only-binary :all: -r requirements.lock"
+        run: pip install -r requirements.lock
 
       # Los inputs van por 'env' y no interpolados en el 'run'.
       #
