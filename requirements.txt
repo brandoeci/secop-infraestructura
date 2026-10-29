@@ -1,4 +1,22 @@
-# Dependencias del ETL. Probado con Python 3.12.
+# Dependencias del proyecto. Probado con Python 3.12.1 en un entorno virtual.
+#
+#   python -m venv .venv
+#   .venv\Scripts\activate          (Windows)   |   source .venv/bin/activate  (Linux)
+#   pip install -r requirements.txt
+#
+# El entorno virtual no es ceremonia: dbt-duckdb arrastra su propia version de
+# pyarrow, y pyarrow es justo la libreria que escribe los Parquet que lee Power
+# BI. Instalarlo en el Python del sistema cambiaria esa version sin avisar y
+# podria romper el informe por un lado que no tiene que ver con el cambio.
+
+# --- Ingesta (capa bronze) ---
 requests>=2.31
 pandas>=2.2
 pyarrow>=15.0
+
+# --- Transformacion (silver y gold) ---
+# El star schema se construye con dbt sobre DuckDB. DuckDB no es un servidor:
+# es una libreria embebida, asi que el repo sigue clonandose y corriendose sin
+# instalar nada aparte.
+duckdb>=1.0
+dbt-duckdb>=1.8

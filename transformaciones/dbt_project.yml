@@ -1,0 +1,47 @@
+# Proyecto dbt del esquema en estrella de SECOP.
+#
+# Reparto de capas (medallion):
+#   bronze  etl/aterrizar.py        crudo fiel al origen, todo texto
+#   silver  models/staging          tipado y limpieza
+#           models/intermedio       banderas de calidad
+#   gold    models/marts            el star schema que lee Power BI
+#
+# La ingesta sigue en Python porque es paginacion HTTP con reanudacion, que es
+# codigo de control de flujo y no una transformacion. De bronze hacia arriba
+# todo es SQL, que es la forma natural de un esquema en estrella y ademas trae
+# los tests y el linaje de fabrica.
+
+name: 'secop'
+version: '1.0.0'
+config-version: 2
+profile: 'secop'
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths:  ["tests"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  secop:
+    staging:
+      +schema: silver
+      +materialized: view
+    intermedio:
+      +schema: silver
+      +materialized: table
+    marts:
+      +schema: gold
+      +materialized: table
+
+vars:
+  # Ventana de anios plausible para una fecha de este dataset. SECOP II arranca
+  # en 2015 y hay concesiones que terminan legitimamente en 2055, pero un
+  # contrato trae fecha de fin en el anio 0206 y esa sola fila estiraba la
+  # tabla de fechas a 1.850 anios. Ver docs/calidad-datos.md seccion 5.
+  anio_min: 2015
+  anio_max: 2060
+
+  # El registro diagnosticado como error de digitacion en docs/calidad-datos.md.
+  # No se borra: se marca con valor_confiable = false.
+  contrato_corrupto: 'CO1.PCCNTR.5972834'

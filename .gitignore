@@ -21,3 +21,12 @@ abrir-claude.bat
 
 # Notas de contexto privadas: se quedan en la maquina, no en el repo
 CLAUDE.md
+
+# Artefactos de dbt: se regeneran con 'dbt build'.
+# target/ trae manifest.json y run_results.json, que son la fuente de la bitacora
+# de corridas, no algo que se versione a mano.
+transformaciones/target/
+transformaciones/dbt_packages/
+transformaciones/logs/
+logs/
+.user.yml

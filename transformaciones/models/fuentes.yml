@@ -1,0 +1,25 @@
+version: 2
+
+sources:
+  - name: bronze
+    description: >
+      Capa bronze: el NDJSON crudo aterrizado en Parquet por etl/aterrizar.py,
+      fiel al origen. Todas las columnas son texto porque la API entrega JSON
+      sin esquema y omite las claves nulas: dejar que el lector infiera haria
+      que el tipo de una columna dependiera de que filas le tocaron en el lote.
+    meta:
+      external_location: "../data/bronze/{name}.parquet"
+    tables:
+      - name: contratos
+        description: >
+          Un contrato de obra e infraestructura por fila, tal como lo devolvio
+          la API de Socrata (dataset jbjy-vk9h). El universo son los contratos
+          firmados desde 2023-10-05 que cumplen el criterio por tipo o el
+          criterio por categoria UNSPSC V1.72. Ver docs/decisiones.md, D1.
+        columns:
+          - name: id_contrato
+            description: Clave natural del contrato en SECOP II.
+            data_tests: [not_null, unique]
+          - name: _ingestado_en
+            description: Hora UTC en que etl/aterrizar.py escribio esta fila.
+            data_tests: [not_null]
