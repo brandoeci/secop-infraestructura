@@ -1,0 +1,13 @@
+# Perfil de conexion. Va en el repo a proposito: DuckDB es un archivo local,
+# aqui no hay servidor ni credenciales que ocultar, y asi el proyecto se clona
+# y se corre sin configurar nada.
+
+secop:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      # Relativa al directorio del proyecto dbt (transformaciones/).
+      path: "{{ env_var('SECOP_DUCKDB', '../data/warehouse.duckdb') }}"
+      threads: 4
+      extensions: []
