@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
@@ -53,7 +54,24 @@ def git_sha() -> str | None:
         return None
 
 
-def contar_filas(almacen: Path) -> dict[str, int | None]:
+def ruta_bronze(proyecto: Path) -> Path:
+    """Donde esta el bronze de esta corrida.
+
+    Se lee de SECOP_BRONZE, la misma variable que usa la fuente de dbt, para
+    que la bitacora cuente el bronze que de verdad se proceso. En el CI eso es
+    el fixture de tests/fixtures/, no data/bronze/, y antes se reportaba como
+    n/d por mirar siempre la ruta por defecto.
+
+    La variable es relativa al directorio del proyecto dbt, igual que en
+    fuentes.yml, asi que se resuelve desde ahi.
+    """
+    base = os.environ.get("SECOP_BRONZE")
+    if base:
+        return (proyecto / base / "contratos.parquet").resolve()
+    return Path("data/bronze/contratos.parquet")
+
+
+def contar_filas(almacen: Path, proyecto: Path) -> dict[str, int | None]:
     """Filas en cada capa, para ver de un vistazo donde se quedo el dato."""
     if not almacen.exists():
         return {"bronze": None, "silver": None, "gold": None}
@@ -64,9 +82,11 @@ def contar_filas(almacen: Path) -> dict[str, int | None]:
                 return con.execute(sql).fetchone()[0]
             except duckdb.Error:
                 return None
+        bronze = ruta_bronze(proyecto)
         return {
-            "bronze": una("select count(*) from "
-                          "read_parquet('data/bronze/contratos.parquet')"),
+            "bronze": (una("select count(*) from "
+                           f"read_parquet('{bronze.as_posix()}')")
+                       if bronze.exists() else None),
             "silver": una("select count(*) from main_silver.int_contratos_calidad"),
             "gold": una("select count(*) from main_gold.hecho_contratos"),
         }
@@ -127,7 +147,8 @@ def leer_corrida(proyecto: Path) -> dict:
 def registrar(proyecto: Path, almacen: Path, salida: Path) -> None:
     fila = leer_corrida(proyecto)
     fila["git_sha"] = git_sha()
-    fila.update({f"filas_{k}": v for k, v in contar_filas(almacen).items()})
+    fila.update({f"filas_{k}": v
+             for k, v in contar_filas(almacen, proyecto).items()})
     if not fila["ejecutada_en"]:
         fila["ejecutada_en"] = datetime.now(UTC).isoformat(timespec="seconds")
 
@@ -178,9 +199,15 @@ def registrar(proyecto: Path, almacen: Path, salida: Path) -> None:
           f"{fila['modelos_error']} con error")
     print(f"  tests              {fila['tests_pass']} pass, "
           f"{fila['tests_warn']} warn, {fila['tests_fail']} fail")
-    print(f"  filas              bronze {fila['filas_bronze']:,} -> "
-          f"silver {fila['filas_silver']:,} -> gold {fila['filas_gold']:,}"
-          if fila["filas_gold"] is not None else "  filas              n/d")
+    # Cada capa se formatea por separado: si una no se pudo contar, se dice de
+    # esa y no se pierden las otras dos. Antes el guard miraba filas_gold y
+    # reventaba cuando la que faltaba era filas_bronze.
+    def mil(clave: str) -> str:
+        v = fila.get(clave)
+        return f"{v:,}" if isinstance(v, int) else "n/d"
+
+    print(f"  filas              bronze {mil('filas_bronze')} -> "
+          f"silver {mil('filas_silver')} -> gold {mil('filas_gold')}")
     print(f"\n{total} corridas en {salida}")
 
 
