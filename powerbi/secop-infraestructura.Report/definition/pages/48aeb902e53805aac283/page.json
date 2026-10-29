@@ -4,5 +4,20 @@
   "displayName": " Quién contrata",
   "displayOption": "FitToPage",
   "height": 1440,
-  "width": 2560
+  "width": 2560,
+  "objects": {
+    "outspacePane": [
+      {
+        "properties": {
+          "width": {
+            "expr": {
+              "Literal": {
+                "Value": "205L"
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
 }
