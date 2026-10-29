@@ -1,0 +1,191 @@
+version: 2
+
+# Control de calidad del modelo gold.
+#
+# Dos severidades, y la diferencia importa:
+#
+#   error  rompe 'dbt build'. Como etl/exportar.py corre DESPUES, un error
+#          aqui significa que data/curated/ no se toca y Power BI sigue
+#          leyendo el ultimo modelo bueno. Se reserva para lo que hace el
+#          modelo incargable o directamente falso.
+#
+#   warn   deja pasar y queda en el log y en run_results.json. Es para los
+#          defectos del origen que ya estan diagnosticados en
+#          docs/calidad-datos.md: no son sorpresas, son el estado conocido
+#          del dato publico, y el informe los describe en vez de ocultarlos.
+#
+# Los umbrales de error_if no son redondos por gusto: salen de medir el
+# estado actual y dejar holgura. Si el origen se degrada mas alla de eso, la
+# corrida se detiene en vez de publicar un modelo peor en silencio.
+
+models:
+
+  - name: hecho_contratos
+    description: >
+      Grano: un contrato de obra e infraestructura. 66.875 filas. Carga
+      incremental con MERGE sobre id_contrato.
+    columns:
+      - name: id_contrato
+        description: Clave natural del contrato en SECOP II.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: entidad_key
+        description: FK a dim_entidad. La unidad contratante, no el NIT.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                  to: ref('dim_entidad')
+                  field: entidad_key
+
+      - name: proveedor_key
+        description: FK a dim_proveedor.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                  to: ref('dim_proveedor')
+                  field: proveedor_key
+
+      # Estas cuatro admiten nulo: si el contrato no trae el atributo, la
+      # dimension no tiene fila para el y apuntar a una inventada seria peor.
+      # El test de relationships ignora los nulos por diseno.
+      - name: tipo_contrato_key
+        data_tests:
+          - relationships:
+              arguments:
+                  to: ref('dim_tipo_contrato')
+                  field: tipo_contrato_key
+      - name: estado_key
+        data_tests:
+          - relationships:
+              arguments:
+                  to: ref('dim_estado')
+                  field: estado_key
+      - name: modalidad_key
+        data_tests:
+          - relationships:
+              arguments:
+                  to: ref('dim_modalidad')
+                  field: modalidad_key
+      - name: categoria_key
+        data_tests:
+          - relationships:
+              arguments:
+                  to: ref('dim_categoria')
+                  field: categoria_key
+
+      - name: fecha_firma_key
+        description: FK a dim_fecha. Nula fuera de la ventana 2015-2060.
+        data_tests:
+          - relationships:
+              arguments:
+                  to: ref('dim_fecha')
+                  field: fecha_key
+      - name: fecha_inicio_key
+        data_tests:
+          - relationships:
+              arguments:
+                  to: ref('dim_fecha')
+                  field: fecha_key
+      - name: fecha_fin_key
+        data_tests:
+          - relationships:
+              arguments:
+                  to: ref('dim_fecha')
+                  field: fecha_key
+
+      - name: valor_contratado
+        description: Valor del contrato. Filtrar por valor_confiable al sumarlo.
+        data_tests: [not_null]
+      - name: valor_pagado
+        data_tests: [not_null]
+
+      - name: valor_confiable
+        description: >
+          False en el registro diagnosticado como error de digitacion. Las
+          medidas DAX que hablan de dinero filtran por esta bandera.
+        data_tests: [not_null]
+      - name: pago_exigible
+        data_tests: [not_null]
+      - name: fechas_coherentes
+        data_tests: [not_null]
+
+      - name: hash_atributos
+        description: >
+          Huella de lo que puede cambiar en el contrato. Metadato del
+          pipeline: no se exporta a data/curated/.
+        data_tests: [not_null]
+
+  - name: dim_entidad
+    description: "Grano: la unidad contratante (nit, nombre). 3.057 filas sobre 2.692 NIT."
+    columns:
+      - name: entidad_key
+        data_tests: [unique, not_null]
+      - name: nombre_entidad
+        data_tests: [not_null]
+
+  - name: dim_proveedor
+    description: >
+      Grano: el proveedor. Identidad por documento cuando sirve y por nombre
+      normalizado cuando es centinela (6,1 %, casi todos consorcios).
+    columns:
+      - name: proveedor_key
+        data_tests: [unique, not_null]
+      - name: proveedor
+        data_tests: [not_null]
+      - name: tiene_documento
+        data_tests: [not_null]
+
+  - name: dim_fecha
+    description: Tabla de fechas comun y continua, de 1 de enero a 31 de diciembre.
+    columns:
+      - name: fecha_key
+        data_tests: [unique, not_null]
+      - name: fecha
+        data_tests: [unique, not_null]
+      - name: anio
+        # La ventana de anios se comprueba en tests/anio_fuera_de_ventana.sql:
+        # fuera de ella la tabla de fechas se vuelve inservible (un contrato
+        # con fecha de fin en el anio 0206 la estiraba a 1.850 anios).
+        data_tests: [not_null]
+
+  - name: dim_tipo_contrato
+    columns:
+      - name: tipo_contrato_key
+        data_tests: [unique, not_null]
+      - name: tipo_contrato
+        data_tests: [unique, not_null]
+
+  - name: dim_estado
+    columns:
+      - name: estado_key
+        data_tests: [unique, not_null]
+      - name: estado
+        data_tests:
+          - unique
+          - not_null
+          # Si el origen introduce un estado nuevo hay que decidir si cuenta
+          # como pago exigible, asi que conviene enterarse y no tragarlo.
+          - accepted_values:
+              arguments:
+                values: ['Aprobado', 'Cancelado', 'Cedido', 'Cerrado',
+                         'En ejecución', 'Modificado', 'Suspendido', 'Terminado']
+              config:
+                severity: warn
+
+  - name: dim_modalidad
+    columns:
+      - name: modalidad_key
+        data_tests: [unique, not_null]
+      - name: modalidad
+        data_tests: [unique, not_null]
+
+  - name: dim_categoria
+    columns:
+      - name: categoria_key
+        data_tests: [unique, not_null]
+      - name: categoria
+        data_tests: [unique, not_null]
