@@ -1,5 +1,11 @@
-# Datos: nunca se versionan. El repo se reproduce corriendo el ETL.
-data/
+# Datos: nunca se versionan. El repo se reproduce corriendo el pipeline.
+#
+# Es 'data/*' y no 'data/' a proposito: con la barra final git no entra en la
+# carpeta y la excepcion de .gitkeep no puede aplicarse. Y la carpeta tiene que
+# existir en un clon limpio, porque DuckDB no crea el directorio padre de su
+# archivo: sin ella, 'dbt build' falla con IOException en el primer intento.
+data/*
+!data/.gitkeep
 
 # Python
 __pycache__/

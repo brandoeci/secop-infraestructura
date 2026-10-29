@@ -1,0 +1,12 @@
+Esta carpeta tiene que existir en un clon limpio del repositorio.
+
+DuckDB no crea el directorio padre de su archivo: si data/ no existe, el primer
+`dbt build` falla con "IO Error: Cannot open file .../data/warehouse.duckdb".
+Lo descubrio el CI en la primera corrida sobre un clon limpio.
+
+Su contenido no se versiona (ver .gitignore). Lo genera el pipeline:
+
+    data/raw/            NDJSON crudo tal como llega de la API
+    data/bronze/         el crudo en Parquet, fiel al origen
+    data/warehouse.duckdb   silver y gold
+    data/curated/        los Parquet que lee Power BI
