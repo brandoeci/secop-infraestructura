@@ -51,19 +51,30 @@ jobs:
           cache: pip
 
       - name: Instalar dependencias
-        run: pip install -r requirements.txt
+        run: "pip install --only-binary :all: -r requirements.lock"
 
+      # Los inputs van por 'env' y no interpolados en el 'run'.
+      #
+      # No es manía: ${{ inputs.desde }} dentro de un run se sustituye como
+      # texto ANTES de que bash vea la línea, así que quien dispare el
+      # workflow puede meter ahí comandos y se ejecutan con el token del
+      # repositorio. Pasándolo por env, bash lo trata como el valor de una
+      # variable y no como código.
       - name: Descargar el universo de obra
+        env:
+          DESDE: ${{ inputs.desde }}
         run: |
-          if [ -n "${{ inputs.desde }}" ]; then
-            python etl/descargar.py --universo obra --desde "${{ inputs.desde }}"
+          if [ -n "$DESDE" ]; then
+            python etl/descargar.py --universo obra --desde "$DESDE"
           else
             python etl/descargar.py --universo obra
           fi
 
       - name: Correr el pipeline
+        env:
+          FULL_REFRESH: ${{ inputs.full_refresh }}
         run: |
-          if [ "${{ inputs.full_refresh }}" = "true" ]; then
+          if [ "$FULL_REFRESH" = "true" ]; then
             python etl/correr_pipeline.py --full-refresh
           else
             python etl/correr_pipeline.py
