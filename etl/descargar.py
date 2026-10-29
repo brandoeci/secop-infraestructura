@@ -257,7 +257,14 @@ def main() -> None:
     p.add_argument("--universo", choices=["obra"], default=None,
                    help="usa un filtro predefinido en vez de --select/--where; "
                         "'obra' = los 66.831 contratos de infraestructura (D1+D2)")
+    p.add_argument("--desde", metavar="AAAA-MM-DD", default=None,
+                   help="con --universo, solo los contratos firmados desde esa "
+                        "fecha. Es la descarga incremental: el pipeline programado "
+                        "no vuelve a bajar los 66.875 contratos cada semana.")
     a = p.parse_args()
+
+    if a.desde and a.universo is None:
+        raise SystemExit("--desde solo aplica con --universo obra.")
 
     select, where, filas = a.select, a.where, a.filas
     if a.universo == "obra":
@@ -265,10 +272,18 @@ def main() -> None:
             raise SystemExit("--universo ya define el select y el where; "
                              "no lo combine con --select ni --where.")
         select, where = universo_obra()
+        if a.desde:
+            # Se aprieta el filtro de fecha en vez de sustituirlo: el
+            # universo sigue siendo el de la decision D1, solo acotado a lo
+            # firmado desde esa fecha. La salida tambien cambia de nombre,
+            # porque un NDJSON parcial no es el universo completo y mezclarlos
+            # en el mismo archivo seria el peor error posible aqui.
+            where = f"fecha_de_firma >= '{a.desde}T00:00:00' AND ({where})"
         if filas == 10000:  # el usuario no toco --filas: se quiere el universo entero
             filas = 0
         if a.salida == Path("data/raw/muestra_10k.ndjson"):
-            a.salida = Path("data/raw/obra.ndjson")
+            a.salida = (Path(f"data/raw/obra-desde-{a.desde}.ndjson")
+                        if a.desde else Path("data/raw/obra.ndjson"))
 
     if a.contar:
         print(f"{contar(sesion(), where):,}")
