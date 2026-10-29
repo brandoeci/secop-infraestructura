@@ -30,3 +30,8 @@ transformaciones/dbt_packages/
 transformaciones/logs/
 logs/
 .user.yml
+
+# El bronze del fixture lo genera el CI con etl/aterrizar.py. Lo que se
+# versiona es el NDJSON de tests/fixtures/, no su Parquet derivado.
+tests/fixtures/bronze/
+tests/fixtures/*.duckdb

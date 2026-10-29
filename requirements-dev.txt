@@ -1,0 +1,4 @@
+# Dependencias solo para desarrollo y CI. No hacen falta para correr el ETL.
+-r requirements.txt
+
+ruff>=0.6

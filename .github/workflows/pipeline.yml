@@ -1,0 +1,115 @@
+# Pipeline programado contra los datos reales de SECOP II.
+#
+# Distinto del de CI y por un motivo: este si sale a la red, descarga de la
+# API de Socrata y construye el universo completo. Por eso va en cron semanal
+# y no en cada push.
+#
+# La descarga es incremental (--desde), que es donde la carga incremental se
+# gana el sueldo: no se vuelven a bajar 67.000 contratos cada semana para
+# descubrir que cambiaron doscientos.
+#
+# Si el control de calidad falla, el workflow falla, GitHub manda el correo y
+# los Parquet no se publican como artefacto. Ahi se acaba el fallo silencioso,
+# que era el problema de tener esto como un script que alguien se acordaba de
+# correr a mano.
+
+name: Pipeline SECOP
+
+on:
+  schedule:
+    # Lunes a las 06:00 UTC, 01:00 en Colombia.
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      desde:
+        description: 'Descargar los contratos firmados desde esta fecha (AAAA-MM-DD)'
+        required: false
+        default: ''
+      full_refresh:
+        description: 'Reconstruir gold de cero en vez de hacer MERGE'
+        type: boolean
+        required: false
+        default: false
+
+# Dos corridas a la vez se pisarian el almacen DuckDB.
+concurrency:
+  group: pipeline-secop
+  cancel-in-progress: false
+
+jobs:
+  correr:
+    name: Descarga, transformacion y control de calidad
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Descargar el universo de obra
+        run: |
+          if [ -n "${{ inputs.desde }}" ]; then
+            python etl/descargar.py --universo obra --desde "${{ inputs.desde }}"
+          else
+            python etl/descargar.py --universo obra
+          fi
+
+      - name: Correr el pipeline
+        run: |
+          if [ "${{ inputs.full_refresh }}" = "true" ]; then
+            python etl/correr_pipeline.py --full-refresh
+          else
+            python etl/correr_pipeline.py
+          fi
+
+      - name: Resumen de la corrida
+        if: always()
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import duckdb, os
+          f = Path("data/curated/auditoria_corridas.parquet")
+          if not f.exists():
+              print("no hay bitacora: la corrida no llego a registrarse")
+              raise SystemExit(0)
+          con = duckdb.connect(":memory:")
+          filas = con.execute(f"""
+              select resultado, tests_pass, tests_warn, tests_fail,
+                     filas_bronze, filas_gold, duracion_segundos
+              from read_parquet('{f.as_posix()}')
+              order by ejecutada_en desc limit 1
+          """).fetchall()[0]
+          resumen = (
+              f"| | |\n|---|---|\n"
+              f"| Resultado | **{filas[0]}** |\n"
+              f"| Tests | {filas[1]} pass, {filas[2]} warn, {filas[3]} fail |\n"
+              f"| Filas | bronze {filas[4]:,} -> gold {filas[5]:,} |\n"
+              f"| Duracion | {filas[6]} s |\n"
+          )
+          print(resumen)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as s:
+              s.write("## Corrida del pipeline\n\n" + resumen)
+          PY
+
+      - name: Publicar el modelo y la bitacora
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: modelo-curated
+          path: data/curated/
+          retention-days: 30
+
+      - name: Guardar los artefactos de dbt para diagnosticar
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dbt-target
+          path: transformaciones/target/*.json
+          retention-days: 30
