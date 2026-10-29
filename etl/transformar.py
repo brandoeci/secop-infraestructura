@@ -1,4 +1,30 @@
-"""Transforma el NDJSON crudo de obra en un esquema en estrella en Parquet.
+"""SUPERADO. El esquema en estrella lo construye ahora dbt.
+
+Desde el 2026-10-29 este script no es parte del pipeline. Su trabajo lo hacen
+los modelos de transformaciones/models/, y el pipeline se corre con:
+
+    python etl/correr_pipeline.py
+
+Se conserva por dos motivos, no por nostalgia:
+
+  - Es la referencia de etl/comparar_salidas.py, que fue lo que probo que la
+    migracion a dbt no cambio ningun dato: 0 diferencias en las 8 tablas,
+    emparejando por clave natural.
+  - Documenta de donde salio cada decision de grano. Esos comentarios se
+    trasladaron a los modelos y a docs/modelo.md, y aqui queda el original.
+
+Correrlo todavia funciona y sobrescribe data/curated/ con claves
+POSICIONALES, que es justo el defecto que la migracion arreglo: una entidad
+nueva renumera las demas y la carga incremental deja de ser posible. Si se
+corre por error, se repara con:
+
+    python etl/correr_pipeline.py --full-refresh
+
+Lo que sigue es la documentacion original del script.
+
+---
+
+Transforma el NDJSON crudo de obra en un esquema en estrella en Parquet.
 
 Pandas y no Spark, a proposito: son 66.875 filas. Spark se justifica por los
 ~26 GB del dataset completo, no por este recorte, y una herramienta puesta sin
