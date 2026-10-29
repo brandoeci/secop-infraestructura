@@ -40,8 +40,12 @@ jobs:
       # Con las versiones fijadas de requirements.lock, no con los rangos de
       # requirements.txt: una corrida automatica no deberia volverse roja
       # porque una dependencia publico una version nueva anoche.
+      #
+      # Sin --only-binary :all:, aunque Sonar lo pida (S8541): uno de los
+      # paquetes del arbol de dbt no publica wheel y la instalacion falla
+      # con 'No matching distribution found'. Probado en este mismo CI.
       - name: Instalar dependencias
-        run: "pip install --only-binary :all: -r requirements.lock"
+        run: pip install -r requirements.lock
 
       - name: Linter
         run: ruff check etl/
