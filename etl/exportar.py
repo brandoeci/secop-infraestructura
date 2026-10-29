@@ -59,9 +59,14 @@ def exportar(almacen: Path, salida: Path) -> None:
         tmp = Path(tmp)
         for t in TABLAS:
             destino = tmp / f"{t}.parquet"
+            # hash_atributos es metadato del pipeline, no un atributo del
+            # contrato: sirve para que el MERGE distinga una fila que cambio
+            # de una que volvio a llegar igual. El modelo de Power BI no lo
+            # declara y no tiene por que verlo.
+            columnas = "* exclude (hash_atributos)" if t == "hecho_contratos" else "*"
             con.execute(
-                f"copy (select * from main_gold.{t}) to '{destino.as_posix()}' "
-                "(format parquet, compression snappy)")
+                f"copy (select {columnas} from main_gold.{t}) "
+                f"to '{destino.as_posix()}' (format parquet, compression snappy)")
 
         print(f"{'tabla':22} {'filas':>9} {'MB':>7}")
         print("-" * 42)
