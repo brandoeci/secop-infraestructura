@@ -60,11 +60,11 @@
                       "Entity": "hecho_contratos"
                     }
                   },
-                  "Property": "Valor contratado"
+                  "Property": "Valor contratado sin filtrar"
                 }
               },
-              "queryRef": "hecho_contratos.Valor contratado",
-              "nativeQueryRef": "Valor contratado",
+              "queryRef": "hecho_contratos.Valor contratado sin filtrar",
+              "nativeQueryRef": "Valor contratado sin filtrar",
               "active": true
             }
           ]
@@ -82,7 +82,7 @@
                   "Property": "Veces p99"
                 }
               },
-              "queryRef": "dim_categoria.Veces p99",
+              "queryRef": "hecho_contratos.Veces p99",
               "nativeQueryRef": "Veces p99"
             }
           ]
