@@ -25,32 +25,35 @@ with fechas_del_hecho as (
 rango as (
 
     select
-        make_date(min(year(fecha)),  1,  1) as inicio,
-        make_date(max(year(fecha)), 12, 31) as fin
+        {{ fecha_de('min(extract(year from fecha))', 1, 1) }}   as inicio,
+        {{ fecha_de('max(extract(year from fecha))', 12, 31) }} as fin
     from fechas_del_hecho
     where fecha is not null
-      and year(fecha) between {{ var('anio_min') }} and {{ var('anio_max') }}
+      and extract(year from fecha)
+          between {{ var('anio_min') }} and {{ var('anio_max') }}
 
 ),
 
 dias as (
 
-    select unnest(generate_series(inicio, fin, interval 1 day))::date as fecha
-    from rango
+    select cast(dia as DATE) as fecha
+    from rango,
+         unnest({{ serie_de_fechas('inicio', 'fin') }}) as dia
 
 )
 
 select
-    (strftime(fecha, '%Y%m%d'))::INTEGER as fecha_key,
+    cast({{ formato_fecha('fecha', '%Y%m%d') }} as INT64) as fecha_key,
     fecha,
-    year(fecha)::INTEGER                 as anio,
-    quarter(fecha)::INTEGER              as trimestre,
-    month(fecha)::INTEGER                as mes,
-    day(fecha)::INTEGER                  as dia,
-    list_value('enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
-               'agosto', 'septiembre', 'octubre', 'noviembre',
-               'diciembre')[month(fecha)] as nombre_mes,
-    strftime(fecha, '%Y-%m')             as anio_mes,
-    year(fecha) || '-T' || quarter(fecha) as anio_trimestre
+    cast(extract(year    from fecha) as INT64) as anio,
+    cast(extract(quarter from fecha) as INT64) as trimestre,
+    cast(extract(month   from fecha) as INT64) as mes,
+    cast(extract(day     from fecha) as INT64) as dia,
+    {{ elemento("['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
+                  'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']",
+                'extract(month from fecha)') }} as nombre_mes,
+    {{ formato_fecha('fecha', '%Y-%m') }} as anio_mes,
+    cast(extract(year from fecha) as STRING) || '-T'
+        || cast(extract(quarter from fecha) as STRING) as anio_trimestre
 from dias
 order by fecha

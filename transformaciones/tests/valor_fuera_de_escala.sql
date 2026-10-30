@@ -44,7 +44,7 @@ with referencia as (
         id_contrato,
         valor_del_contrato,
         modalidad_de_contratacion,
-        median(valor_del_contrato) over (
+        {{ percentil('valor_del_contrato', 0.5) }} over (
             partition by modalidad_de_contratacion
         ) as mediana_modalidad
     from {{ ref('int_contratos_calidad') }}

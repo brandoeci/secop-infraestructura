@@ -2,7 +2,7 @@
 
 {# Quita espacios sobrantes y saltos de linea dentro del propio campo. #}
 {% macro normalizar_texto(c) %}
-    nullif(trim(regexp_replace(cast({{ c }} as varchar), '\s+', ' ', 'g')), '')
+    nullif(trim(regexp_replace(cast({{ c }} as STRING), '\s+', ' ', 'g')), '')
 {% endmacro %}
 
 
@@ -20,10 +20,14 @@
 {% endmacro %}
 
 
-{# Version comparable de un texto, para agrupar grafias del mismo nombre. #}
+{#
+  Version comparable de un texto, para agrupar grafias del mismo nombre.
+  quitar_tildes() vive en dialecto.sql porque es de las pocas que no tiene
+  equivalente directo entre los dos motores.
+#}
 {% macro sin_tildes(c) %}
     trim(regexp_replace(
-        regexp_replace(upper(strip_accents(coalesce(cast({{ c }} as varchar), ''))),
+        regexp_replace(upper({{ quitar_tildes("coalesce(cast(" ~ c ~ " as STRING), '')") }}),
                        '[^A-Z0-9 ]', '', 'g'),
         '\s+', ' ', 'g'))
 {% endmacro %}

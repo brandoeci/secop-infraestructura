@@ -35,7 +35,7 @@ marcado as (
         -- casos, mas uno con la fecha de fin en el anio 0206.
         coalesce(
             fecha_de_fin_del_contrato >= fecha_de_firma
-            and year(fecha_de_fin_del_contrato)
+            and extract(year from fecha_de_fin_del_contrato)
                 between {{ var('anio_min') }} and {{ var('anio_max') }},
             false
         ) as fechas_coherentes,
@@ -43,12 +43,18 @@ marcado as (
         -- La duracion se deja nula cuando saldria negativa: un numero
         -- negativo de dias no es una duracion corta, es un dato malo, y
         -- promediarlo contaminaria la medida.
-        case
-            when date_diff('day', fecha_de_inicio_del_contrato,
-                                  fecha_de_fin_del_contrato) >= 0
-            then date_diff('day', fecha_de_inicio_del_contrato,
-                                  fecha_de_fin_del_contrato)
-        end::INTEGER as duracion_dias
+        --
+        -- dias_entre() nombra sus parametros a proposito: los dos motores
+        -- tienen date_diff pero con los argumentos en orden distinto, y
+        -- equivocarse solo cambia el signo. Ver macros/dialecto.sql.
+        cast(
+            case
+                when {{ dias_entre('fecha_de_inicio_del_contrato',
+                                   'fecha_de_fin_del_contrato') }} >= 0
+                then {{ dias_entre('fecha_de_inicio_del_contrato',
+                                   'fecha_de_fin_del_contrato') }}
+            end
+            as INT64) as duracion_dias
 
     from contratos
 
@@ -68,16 +74,16 @@ referencia_p99 as (
         --
         -- El p99 se calcula solo sobre las filas confiables, para que el
         -- registro corrupto no infle el umbral que deberia delatarlo.
-        quantile_cont(
-            case when valor_confiable then valor_del_contrato end, 0.99
-        ) over (partition by modalidad_de_contratacion) as p99_modalidad
+        {{ percentil('case when valor_confiable then valor_del_contrato end',
+                     0.99) }}
+            over (partition by modalidad_de_contratacion) as p99_modalidad
 
     from marcado
 
 )
 
 select
-    * exclude (p99_modalidad),
+    * except (p99_modalidad),
 
     case
         when p99_modalidad > 0

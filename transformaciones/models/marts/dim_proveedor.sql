@@ -10,23 +10,33 @@
 --   queda marcada con tiene_documento = false. Son 3.889 proveedores que un
 --   centinela colapsaria en una sola fila.
 
-with conteos as (
+with base as (
+
+    select * from {{ ref('int_contratos_calidad') }}
+
+),
+
+resumen as (
 
     select
         identidad_proveedor,
-        {{ histograma('proveedor_adjudicado') }} as h_proveedor,
-        not bool_and(documento_es_centinela)     as tiene_documento,
-        count(*)::BIGINT                         as contratos
-
-    from {{ ref('int_contratos_calidad') }}
+        not {{ y_logico('documento_es_centinela') }} as tiene_documento,
+        cast(count(*) as INT64)                      as contratos
+    from base
     group by identidad_proveedor
 
+),
+
+nombre_frecuente as (
+    {{ moda_por_grupo('base', ['identidad_proveedor'], 'proveedor_adjudicado') }}
 )
 
 select
-    {{ clave_subrogada(['identidad_proveedor']) }} as proveedor_key,
-    case when tiene_documento then identidad_proveedor end as documento,
-    {{ moda_de('h_proveedor') }} as proveedor,
-    tiene_documento,
-    contratos
-from conteos
+    {{ clave_subrogada(['r.identidad_proveedor']) }} as proveedor_key,
+    case when r.tiene_documento then r.identidad_proveedor end as documento,
+    n.proveedor_adjudicado as proveedor,
+    r.tiene_documento,
+    r.contratos
+from resumen r
+left join nombre_frecuente n
+       on coalesce(r.identidad_proveedor, '∅') = coalesce(n.identidad_proveedor, '∅')

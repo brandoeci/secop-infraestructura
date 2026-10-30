@@ -9,9 +9,10 @@
 -- y se marca el documento centinela. No se agrega, no se filtra y no se
 -- decide nada de negocio: eso vive en intermedio/ y en marts/.
 --
--- El casteo es con try_cast a proposito. Un valor que no se puede convertir
--- se vuelve nulo y queda visible en los tests, en vez de reventar la corrida
--- entera por una fila mala entre 66.875.
+-- El casteo es seguro a proposito (try_cast en DuckDB, safe_cast en BigQuery,
+-- ver macros/dialecto.sql). Un valor que no se puede convertir se vuelve nulo
+-- y queda visible en los tests, en vez de reventar la corrida entera por una
+-- fila mala entre 66.875.
 
 with bronze as (
 
@@ -46,16 +47,23 @@ tipado as (
         {{ normalizar_texto('objeto_del_contrato') }}           as objeto_del_contrato,
 
         -- fechas, normalizadas a dia
-        try_cast(fecha_de_firma               as timestamp)::date as fecha_de_firma,
-        try_cast(fecha_de_inicio_del_contrato as timestamp)::date as fecha_de_inicio_del_contrato,
-        try_cast(fecha_de_fin_del_contrato    as timestamp)::date as fecha_de_fin_del_contrato,
+        cast({{ castear_seguro('fecha_de_firma', 'TIMESTAMP') }} as DATE)
+            as fecha_de_firma,
+        cast({{ castear_seguro('fecha_de_inicio_del_contrato', 'TIMESTAMP') }} as DATE)
+            as fecha_de_inicio_del_contrato,
+        cast({{ castear_seguro('fecha_de_fin_del_contrato', 'TIMESTAMP') }} as DATE)
+            as fecha_de_fin_del_contrato,
 
         -- medidas. El cero no es un valor faltante en este dataset: es la
         -- forma en que la fuente reporta 'todavia no se ha pagado'.
-        coalesce(try_cast(valor_del_contrato       as double), 0.0) as valor_del_contrato,
-        coalesce(try_cast(valor_pagado             as double), 0.0) as valor_pagado,
-        coalesce(try_cast(valor_facturado          as double), 0.0) as valor_facturado,
-        coalesce(try_cast(valor_pendiente_de_pago  as double), 0.0) as valor_pendiente_de_pago,
+        coalesce({{ castear_seguro('valor_del_contrato', tipo_real()) }}, 0.0)
+            as valor_del_contrato,
+        coalesce({{ castear_seguro('valor_pagado', tipo_real()) }}, 0.0)
+            as valor_pagado,
+        coalesce({{ castear_seguro('valor_facturado', tipo_real()) }}, 0.0)
+            as valor_facturado,
+        coalesce({{ castear_seguro('valor_pendiente_de_pago', tipo_real()) }}, 0.0)
+            as valor_pendiente_de_pago,
 
         _ingestado_en
 
@@ -75,7 +83,7 @@ identidad_proveedor as (
         -- dimension.
         case
             when documento_proveedor is null then true
-            when not regexp_full_match(documento_proveedor, '\d+') then true
+            when not {{ coincide_completo('documento_proveedor', '[0-9]+') }} then true
             when length(regexp_replace(documento_proveedor, '^0+', '')) < 5 then true
             else false
         end as documento_es_centinela
