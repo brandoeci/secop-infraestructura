@@ -24,6 +24,13 @@ salen del patrón.
 
 Cuatro páginas, una por pregunta. Las capturas salen del informe publicado.
 
+📄 **[Ver el informe completo en PDF](docs/informe-secop-infraestructura.pdf)** — las cuatro
+páginas tal como se ven en Power BI, sin necesidad de cuenta ni de instalar nada.
+
+> El informe está publicado en Power BI Service y se actualiza desde `data/curated/`, pero el
+> enlace anónimo no está disponible: el tenant desde el que se publica tiene deshabilitada la
+> opción *Publicar en la web*. De ahí el PDF.
+
 ### Resumen — cuánto y dónde
 
 ![Página de resumen del informe](docs/capturas/01-resumen.png)

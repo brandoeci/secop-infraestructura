@@ -80,5 +80,51 @@
       }
     },
     "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "de07a352a0917d436e10",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "hecho_contratos"
+              }
+            },
+            "Property": "Valor contratado"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "27f5d9a001c81182cdad",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "hecho_contratos"
+              }
+            },
+            "Property": "% ejecutado"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "f184af21e42c0675daa3",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "hecho_contratos"
+              }
+            },
+            "Property": "Contratos"
+          }
+        },
+        "type": "Advanced"
+      }
+    ]
   }
 }

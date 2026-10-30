@@ -3,6 +3,9 @@
 Para decirlo en voz alta en una entrevista. Todas las cifras son reales y están respaldadas por
 el repositorio: si alguien pregunta de dónde sale una, se corre el código.
 
+El informe, por si lo piden en la llamada:
+[`docs/informe-secop-infraestructura.pdf`](informe-secop-infraestructura.pdf).
+
 ---
 
 ## El párrafo
