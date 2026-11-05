@@ -1,0 +1,96 @@
+# El MISMO proyecto dbt, contra BigQuery.
+#
+# Este workflow existe para que la portabilidad no sea una afirmacion del
+# README sino algo que se rompe solo si deja de ser cierta. ci.yml corre el
+# pipeline contra DuckDB; este corre los mismos 10 modelos y los mismos 57
+# tests contra BigQuery, y falla si el SQL deja de ser portable.
+#
+# SIN LLAVES. No hay ningun secreto de GCP guardado en GitHub. Se usa
+# federacion de identidad: Actions emite un token OIDC que dice "soy el repo
+# brandoeci/secop-infraestructura" y Google lo acepta porque el proveedor
+# tiene esa condicion escrita. Un fork no puede autenticarse, porque su
+# token lleva otro nombre de repositorio.
+#
+# Corre sobre el fixture de 280 filas, igual que ci.yml: el objetivo es
+# comprobar el dialecto, no mover datos. Y usa datasets propios con sufijo
+# del numero de corrida, que se borran al final, para no tocar el bronze real
+# ni el modelo que lee Power BI.
+#
+# OJO con el nivel gratuito de BigQuery: las sentencias DML estan bloqueadas
+# y el MERGE de hecho_contratos es DML, asi que aqui siempre se corre con
+# --full-refresh. La carga incremental se prueba en ci.yml, contra DuckDB.
+
+name: Nube
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'transformaciones/**'
+      - '.github/workflows/nube.yml'
+  pull_request:
+    paths:
+      - 'transformaciones/**'
+  workflow_dispatch:
+
+permissions:
+  # id-token: write es lo que habilita el OIDC. Sin esto no hay federacion.
+  id-token: write
+  contents: read
+
+jobs:
+  bigquery:
+    name: dbt build --target cloud
+    runs-on: ubuntu-latest
+
+    env:
+      GCP_PROYECTO: golden-capsule-446717-s8
+      # Datasets efimeros, uno por corrida.
+      GCP_DATASET: ci_${{ github.run_id }}
+      SECOP_BRONZE_ESQUEMA: ci_${{ github.run_id }}_bronze
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Instalar dependencias
+        run: |
+          pip install -r requirements.lock
+          pip install dbt-bigquery==1.12.1
+
+      - name: Autenticar en GCP sin llaves
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/147547589173/locations/global/workloadIdentityPools/github/providers/github-oidc
+          service_account: secop-ci@golden-capsule-446717-s8.iam.gserviceaccount.com
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Aterrizar el fixture en bronze
+        run: python etl/aterrizar.py
+              --crudo tests/fixtures/contratos_muestra.ndjson
+              --salida tests/fixtures/bronze/contratos.parquet
+
+      - name: Subir el fixture a BigQuery
+        run: |
+          bq --location=US mk -d "$SECOP_BRONZE_ESQUEMA"
+          bq load --source_format=PARQUET \
+            "$SECOP_BRONZE_ESQUEMA.contratos" \
+            tests/fixtures/bronze/contratos.parquet
+
+      - name: Construir el modelo y correr los tests en BigQuery
+        working-directory: transformaciones
+        run: dbt build --profiles-dir . --target cloud --full-refresh
+
+      # Siempre, tambien si dbt fallo: un dataset olvidado por corrida
+      # llenaria el proyecto, y en el nivel gratuito el limite es 10 GB.
+      - name: Borrar los datasets de la corrida
+        if: always()
+        run: |
+          for d in "$SECOP_BRONZE_ESQUEMA" "${GCP_DATASET}_silver" "${GCP_DATASET}_gold"; do
+            bq rm -r -f -d "$d" || true
+          done
