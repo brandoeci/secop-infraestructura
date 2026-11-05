@@ -174,7 +174,93 @@ Consecuencias:
   menos 3 años", justamente para que la cifra sea comparable entre corridas.
 - Aun así el total crece, porque entran contratos nuevos. **Cualquier cifra del README tiene que
   ir con la fecha de la descarga.**
-- `data/raw/obra.ndjson.estado.json` guarda la consulta y el conteo de esa corrida.
+- `data/raw/obra.ndjson.estado.json` guarda la consulta, el conteo de esa corrida y el conteo
+  del origen con el que se calcularon los `$offset`.
+
+### Y por moverse tumbó una corrida: 414 `id_contrato` repetidos (2026-11-02)
+
+La primera corrida programada de Airflow que se disparó sola falló, y el culpable fue esto mismo.
+
+`descargar.py` pagina con `$offset` y reanuda usando el número de líneas ya escritas como
+próximo offset. Eso vale solo si el conjunto de resultados no se mueve entre corridas. El de
+SECOP II se mueve: cuando entran filas **antes del final** del orden `:id`, todas las que venían
+después suben de posición, y pedir "desde la fila N" devuelve filas que ya estaban en disco.
+
+El archivo traía 66.875 líneas del 2026-10-05 y el universo ya iba en 67.297. Pidió las 422 que
+faltaban desde la posición 66.875 y **414 de ellas ya estaban**:
+
+| | |
+|---|---|
+| Filas en bronze | 67.297 |
+| `id_contrato` distintos | 66.883 |
+| Repetidos | **414** |
+| Test que lo cazó | `source_unique_bronze_contratos_id_contrato` |
+| Resultado de dbt | `PASS=2 WARN=0 ERROR=1 SKIP=64` |
+
+La huella no podía detectarlo: identifica la **consulta** (select, where, orden), no el conjunto
+de resultados. Dos descargas con la misma consulta contra universos distintos tienen la misma
+huella.
+
+**El gate hizo exactamente su trabajo.** `exportar` quedó en `upstream_failed` y no corrió, así
+que `data/curated/` siguió con los Parquet del 2026-11-01 y el informe no vio un solo contrato
+duplicado. `registrar_corrida` sí corrió, por su `trigger_rule="all_done"`, y dejó la corrida
+anotada como `FAIL` con `tests_pass=2, tests_fail=1`.
+
+#### El arreglo
+
+El estado ahora guarda también `disponibles`, el conteo del origen con el que se calcularon los
+offset. Si en la siguiente corrida no coincide, el archivo en disco pertenece a otro universo:
+no se puede continuar, y la descarga **empieza de cero** en vez de reanudar mal. Un estado sin
+ese campo tampoco se reanuda, porque no hay con qué probar que sea seguro.
+
+Reiniciar cuesta unos minutos para 67 mil filas, y es la única forma de que bronze sea un
+*snapshot* de un solo instante. La reanudación sigue sirviendo para lo que se diseñó: una
+descarga que se cortó contra un origen que no se movió.
+
+`etl/probar_reanudacion.py` lo deja probado sin tocar la red, con universo en memoria. Tiene
+**control positivo**: falsea el conteo guardado para que la detección no dispare y comprueba que
+entonces *sí* aparecen duplicados. Sin ese paso la prueba no demostraría nada.
+
+Verificado el 2026-11-03: descarga de cero, **67.299 filas, 0 `id_contrato` duplicados**.
+
+### Y al arreglarlo salió el segundo: 448 claves huérfanas
+
+Con bronze ya limpio, la misma corrida falló otra vez, con cuatro tests distintos: los de
+integridad referencial entre el hecho y cuatro dimensiones.
+
+| Test | Huérfanos |
+|---|---|
+| `relationships_hecho_contratos_proveedor_key` | 349 |
+| `relationships_hecho_contratos_entidad_key` | 86 |
+| `relationships_hecho_contratos_estado_key` | 7 |
+| `relationships_hecho_contratos_categoria_key` | 6 |
+
+La causa está en la combinación de materializaciones, y es un defecto de diseño, no de datos:
+
+- Las **dimensiones** son `table`: se reconstruyen enteras desde el bronze de cada corrida.
+- El **hecho** es `incremental` con MERGE: inserta y actualiza, pero **nunca borra**.
+
+Mientras el universo solo crecía, eso no se notaba. El 2026-11-03 el universo **perdió** filas:
+974 contratos que estaban el 2026-11-01 ya no cumplen el filtro. Las dimensiones se
+reconstruyeron sin ellos; el hecho se los quedó, con sus claves apuntando a filas que habían
+desaparecido. Gold terminó con 68.273 filas contra 67.299 de bronze.
+
+Medido en DuckDB, el diagnóstico no deja dudas: **los 448 huérfanos pertenecen todos a esos 974
+contratos**. Ni uno viene de un contrato vigente.
+
+El gate bloqueó otra vez: `data/curated/` se quedó en los Parquet del 2026-11-01 y la bitácora
+anotó `FAIL` con `filas_gold = 68.273`. Se reparó con `python etl/correr_pipeline.py
+--full-refresh`, que reconstruye gold desde el bronze actual: **67 tests, 63 pasan, 4 avisan, 0
+rompen; gold 67.299 = bronze 67.299; 0 huérfanos.**
+
+**Queda una decisión de modelado pendiente**, porque `--full-refresh` repara pero no previene: la
+semana que viene el origen vuelve a moverse. Hay que decidir si el hecho refleja el origen —y
+entonces el MERGE necesita borrar lo que salió del universo— o si conserva el histórico, y
+entonces las dimensiones no pueden reconstruirse desde cero. Las dos son defendibles y cambian lo
+que dice el informe. Ver `docs/decisiones.md`.
+
+Los cuatro avisos también se movieron con el universo. El 2026-11-03: 637 en cero (eran 630),
+27 atípicos, 194 con fechas incoherentes (eran 200), 46 con pagado mayor que contratado (eran 43).
 
 ---
 
@@ -266,6 +352,7 @@ python etl/descargar.py --universo obra        # 66.875 filas, 20 columnas, 66,9
 python etl/explorar.py --muestra data/raw/obra.ndjson
 ```
 
-Validación de la descarga, verificada: 66.875 filas, **0 `id_contrato` duplicados** (el grano
-"un contrato" se sostiene), exactamente las 20 columnas pedidas, 0 filas con firma anterior al
-2023-10-05.
+Validación de la descarga, verificada el **2026-10-05**: 66.875 filas, **0 `id_contrato`
+duplicados** (el grano "un contrato" se sostiene), exactamente las 20 columnas pedidas, 0 filas
+con firma anterior al 2023-10-05. El **2026-11-03**, con el universo ya en 67.299: mismas
+comprobaciones, mismo resultado.

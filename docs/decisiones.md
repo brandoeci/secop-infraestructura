@@ -196,3 +196,34 @@ La dimensión `territorial_vial` todavía no está construida. El dataset `ie7y-
 por 18 columnas) tiene `Territorial` y `Departamento`, pero hay que definir por dónde se une
 con los contratos: el departamento de la entidad contratante no es necesariamente el
 departamento donde está la vía. Se decide al construirla.
+
+---
+
+## Pendiente de decidir — qué hace el hecho cuando el origen pierde filas
+
+El 2026-11-03 el universo perdió 974 contratos: estaban el 2026-11-01 y ya no cumplen el filtro.
+Las dimensiones son `table` y se reconstruyeron sin ellos; `hecho_contratos` es `incremental` con
+MERGE y se los quedó. Resultado: 448 claves apuntando a filas de dimensión que ya no existen, y
+los cuatro tests de integridad referencial en rojo. Está medido en `docs/calidad-datos.md`
+sección 6.
+
+Se reparó con `--full-refresh`, que reconstruye gold desde el bronze actual. Pero eso repara, no
+previene: el origen se mueve todas las semanas, y reconstruir de cero cada vez deja sin sentido
+la carga incremental que es justamente lo que vale la pena mostrar.
+
+Las dos salidas son defendibles y **cambian las cifras del informe**, así que es una decisión de
+alcance, no de implementación:
+
+**A. El hecho refleja el origen.** Un contrato que sale del universo sale del modelo. El MERGE
+necesita además borrar lo que no está en bronze (`WHEN NOT MATCHED BY SOURCE THEN DELETE`). Es
+coherente con que las dimensiones ya sean `table`, y el informe responde "qué hay hoy".
+Riesgo: con `--desde`, bronze es parcial, así que el borrado solo puede correr cuando bronze es
+el universo completo. Si eso se confunde, se vacía el hecho.
+
+**B. El hecho conserva el histórico.** Un contrato retirado se queda, marcado. Entonces las
+dimensiones no pueden reconstruirse desde cero: tienen que acumular, que es el camino hacia
+SCD Type 2 (pendiente 5). El informe responde "qué se ha contratado", y hay que explicar por qué
+muestra contratos que SECOP ya no publica.
+
+Mientras no se decida, la reparación documentada es `python etl/correr_pipeline.py
+--full-refresh`.
