@@ -11,3 +11,28 @@ secop:
       path: "{{ env_var('SECOP_DUCKDB', '../data/warehouse.duckdb') }}"
       threads: 4
       extensions: []
+
+    # El MISMO proyecto dbt contra BigQuery. No es una copia del resultado ya
+    # transformado: son los mismos 10 modelos y los mismos 57 tests, y la
+    # diferencia de dialecto la absorbe transformaciones/macros/dialecto.sql.
+    # Cambiar de motor es una bandera:  dbt build --target cloud
+    #
+    # method: oauth usa las credenciales predeterminadas de aplicacion, que
+    # NO son la sesion de `gcloud auth login`. Hay que crearlas aparte:
+    #   gcloud auth application-default login
+    #
+    # OJO en el nivel gratuito de BigQuery: las sentencias DML estan
+    # bloqueadas, y el MERGE de hecho_contratos es DML. Ahi hay que correr con
+    # --full-refresh, que materializa la tabla entera con CREATE OR REPLACE
+    # (DDL, si permitido). El incremental sigue vivo en DuckDB.
+    cloud:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('GCP_PROYECTO', 'golden-capsule-446717-s8') }}"
+      # dbt compone los esquemas como <dataset>_<schema>, asi que aqui salen
+      # main_silver y main_gold, los mismos nombres que en DuckDB.
+      dataset: "{{ env_var('GCP_DATASET', 'main') }}"
+      location: US
+      threads: 4
+      job_retries: 1
+      priority: interactive

@@ -2,6 +2,13 @@ version: 2
 
 sources:
   - name: bronze
+    # En DuckDB la fuente es un archivo y el esquema no se usa: manda
+    # meta.external_location. En BigQuery si se usa, porque ahi bronze es una
+    # tabla de verdad y esto es el dataset donde vive.
+    #
+    # Configurable para que el CI cargue el fixture en su propio dataset y no
+    # sobrescriba el bronze real de 67.299 filas.
+    schema: "{{ env_var('SECOP_BRONZE_ESQUEMA', 'bronze') }}"
     description: >
       Capa bronze: el NDJSON crudo aterrizado en Parquet por etl/aterrizar.py,
       fiel al origen. Todas las columnas son texto porque la API entrega JSON
