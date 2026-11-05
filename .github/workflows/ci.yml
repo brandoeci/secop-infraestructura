@@ -69,6 +69,12 @@ jobs:
         run: python etl/probar_gate.py
               --bronze tests/fixtures/bronze/contratos.parquet
 
+      # No toca la red: sirve un universo en memoria. Cubre el fallo del
+      # 2026-11-02, cuando reanudar la descarga sobre un origen que se habia
+      # movido metio 414 id_contrato repetidos en bronze.
+      - name: Probar que la descarga no reanuda sobre un origen movido
+        run: python etl/probar_reanudacion.py
+
       - name: Registrar la corrida
         if: always()
         run: python etl/registrar_corrida.py

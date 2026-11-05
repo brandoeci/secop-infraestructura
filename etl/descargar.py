@@ -186,6 +186,7 @@ def descargar(objetivo: int, pagina: int, select: str | None, where: str | None,
         salida.unlink(missing_ok=True)
         estado_ruta.unlink(missing_ok=True)
 
+    estado = None
     if estado_ruta.exists():
         estado = json.loads(estado_ruta.read_text(encoding="utf-8"))
         if estado.get("huella") != actual:
@@ -203,6 +204,28 @@ def descargar(objetivo: int, pagina: int, select: str | None, where: str | None,
     total = min(objetivo, disponibles) if objetivo else disponibles
     print(f"filas que cumplen el filtro en la API: {disponibles:,}")
     print(f"a descargar: {total:,} | ya en disco: {ya:,}")
+
+    # Reanudar con $offset solo es valido si el conjunto de resultados no se
+    # movio debajo. El origen NO es append-only: el 2026-11-02 reportaba
+    # 424.165 filas menos que el 2026-10-05. Cuando se borran filas, las que
+    # vienen despues cambian de posicion, y pedir "desde la fila N" devuelve
+    # filas que ya estan en disco. Asi aparecieron 414 id_contrato repetidos
+    # que tumbaron el test de unicidad en la corrida del 2026-11-02.
+    #
+    # La huella identifica la consulta, no el conjunto de resultados, asi que
+    # no podia detectarlo. El conteo del origen si: es una sola peticion, ya
+    # se estaba haciendo, y si cambio entonces el archivo en disco pertenece a
+    # otro universo y continuarlo es incorrecto. En ese caso se empieza de
+    # cero, que para 67 mil filas son unos minutos.
+    if ya > 0:
+        previo = estado.get("disponibles") if estado else None
+        if previo != disponibles:
+            antes = f"{previo:,}" if isinstance(previo, int) else "sin registrar"
+            print(f"  el origen se movio ({antes} -> {disponibles:,}): "
+                  "reanudar por posicion duplicaria filas. Se baja de cero.")
+            salida.unlink(missing_ok=True)
+            estado_ruta.unlink(missing_ok=True)
+            ya = 0
 
     if ya >= total:
         print("nada que hacer: la descarga ya esta completa.")
@@ -230,10 +253,23 @@ def descargar(objetivo: int, pagina: int, select: str | None, where: str | None,
 
             estado_ruta.write_text(json.dumps({
                 "huella": actual, "filas": ya, "objetivo": total,
+                # El conteo con el que se calcularon los $offset de esta
+                # descarga. La proxima corrida lo compara: si no coincide,
+                # este archivo no se puede continuar.
+                "disponibles": disponibles,
                 "select": select, "where": where, "orden": ORDEN,
                 "url": URL, "pagina": pagina,
             }, ensure_ascii=False, indent=2), encoding="utf-8")
             print(f"  {ya:,}/{total:,}")
+
+    # El origen se actualiza a diario y puede moverse a mitad de la descarga.
+    # Si paso, este archivo mezcla dos instantes y puede traer repetidos: el
+    # test de unicidad lo detectaria, pero es mejor decirlo aqui.
+    al_cerrar = contar(s, where)
+    if al_cerrar != disponibles:
+        print(f"  aviso: el origen cambio durante la descarga "
+              f"({disponibles:,} -> {al_cerrar:,}). La proxima corrida "
+              "volvera a bajar el universo completo.", file=sys.stderr)
 
     print(f"listo: {ya:,} filas en {salida}")
 
