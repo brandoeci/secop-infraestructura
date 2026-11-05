@@ -1,0 +1,192 @@
+# Airflow 3.3.2 para orquestar el pipeline SECOP, en local.
+#
+# ESTO NO ES EL COMPOSE OFICIAL, Y ES A PROPOSITO
+# -----------------------------------------------
+# El oficial levanta OCHO servicios porque usa CeleryExecutor, que reparte las
+# tareas entre varias maquinas y por eso necesita Redis como cola y un worker
+# aparte. Aqui las tareas corren en una sola maquina con 8 GB, asi que se usa
+# LocalExecutor: el scheduler lanza las tareas el mismo, en subprocesos.
+#
+# Lo que se cayo con ese cambio:
+#   redis           la cola entre scheduler y workers. Sin Celery no hay cola.
+#   airflow-worker  el proceso que saca tareas de la cola. El scheduler lo hace.
+#   flower          panel de monitoreo de Celery.
+#   airflow-cli     atajo para comandos sueltos; se hace con 'docker compose run'.
+#   triggerer       solo hace falta para operadores diferibles (deferrable), que
+#                   este DAG no usa. Es lo que permite que una tarea que espera
+#                   algo externo libere su slot; aqui nada espera.
+#
+# Lo que queda, y para que sirve cada uno:
+#   postgres              la base de metadatos: estado de cada corrida y tarea.
+#   airflow-init          migra el esquema y crea el usuario. Corre una vez.
+#   airflow-apiserver     la interfaz web y la API REST (puerto 8080).
+#   airflow-scheduler     decide que toca ejecutar y, con LocalExecutor, ejecuta.
+#   airflow-dag-processor parsea los archivos de dags/. En Airflow 3 es un
+#                         proceso separado del scheduler: un DAG con un error de
+#                         sintaxis ya no puede tumbar al planificador.
+#
+# Levantar:   docker compose up -d --build
+# Ver:        http://localhost:8080   (usuario y clave: airflow / airflow)
+# Bajar:      docker compose down
+# Borrar todo (incluida la base de metadatos):  docker compose down -v
+
+name: secop-airflow
+
+x-airflow-comun: &airflow-comun
+  build:
+    # El contexto es la raiz del repo para que el Dockerfile pueda copiar
+    # requirements.lock sin tener que duplicarlo dentro de orquestacion/.
+    context: ..
+    dockerfile: orquestacion/Dockerfile
+  environment: &airflow-entorno
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+
+    # Sin ejemplos: con LOAD_EXAMPLES en true la lista trae ~50 DAGs de muestra
+    # y el unico que importa se pierde entre ellos.
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+
+    # Los DAGs nacen pausados. Asi un DAG recien escrito no se dispara solo
+    # mientras todavia se esta probando.
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+
+    # --- Las dos variables que rompen los compose hechos a mano en Airflow 3 ---
+    #
+    # En Airflow 3 las tareas ya no hablan con la base de datos: hablan con la
+    # Execution API del apiserver, y se autentican con un token JWT. Si el
+    # secreto no se fija, CADA servicio se genera uno aleatorio en memoria, el
+    # del scheduler no coincide con el del apiserver y las tareas mueren con un
+    # 401 que no dice nada util. Tiene que ser el MISMO en todos los servicios.
+    AIRFLOW__CORE__EXECUTION_API_SERVER_URL: 'http://airflow-apiserver:8080/execution/'
+    AIRFLOW__API_AUTH__JWT_SECRET: ${AIRFLOW__API_AUTH__JWT_SECRET:-secop-local-cambialo-en-.env}
+
+    # Cifra las credenciales guardadas en la base de metadatos. Aqui no se
+    # guarda ninguna (DuckDB es un archivo), asi que puede ir vacia en local.
+    AIRFLOW__CORE__FERNET_KEY: ${FERNET_KEY:-}
+
+    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
+
+    # --- Configuracion del pipeline ---
+    #
+    # El almacen DuckDB NO vive en el repo montado, vive en un volumen de
+    # Docker. Dos motivos:
+    #   1. DuckDB bloquea su archivo, y el bind mount de Windows pasa por la VM
+    #      de Docker Desktop, donde el bloqueo de archivos no es fiable.
+    #   2. Separa el estado del orquestador del directorio de trabajo: si el
+    #      pipeline corre aqui y tambien a mano en Windows, no se pisan.
+    # Los Parquet (bronze y curated) SI van al repo montado: escribir un archivo
+    # completo no necesita bloqueo, y Power BI tiene que poder leerlos.
+    SECOP_DUCKDB: /opt/airflow/almacen/warehouse.duckdb
+
+    # Aviso por correo cuando una tarea falla. Lo recoge un flujo de Power
+    # Automate que notifica al movil. Si estan vacias, no se manda nada y el
+    # pipeline corre igual: ver orquestacion/dags/alertas.py.
+    ALERTA_SMTP_HOST: ${ALERTA_SMTP_HOST:-}
+    ALERTA_SMTP_PUERTO: ${ALERTA_SMTP_PUERTO:-587}
+    ALERTA_SMTP_USUARIO: ${ALERTA_SMTP_USUARIO:-}
+    ALERTA_SMTP_CLAVE: ${ALERTA_SMTP_CLAVE:-}
+    ALERTA_DESTINO: ${ALERTA_DESTINO:-}
+
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./logs:/opt/airflow/logs
+    - ./config:/opt/airflow/config
+    # El repo entero, para que las tareas puedan correr etl/ y transformaciones/
+    # y escribir en data/.
+    - ..:/opt/secop
+    - almacen-duckdb:/opt/airflow/almacen
+  user: "${AIRFLOW_UID:-50000}:0"
+  depends_on: &airflow-depende-de
+    postgres:
+      condition: service_healthy
+
+services:
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+    restart: always
+
+  # Corre una vez y termina. Los demas servicios esperan a que acabe BIEN
+  # (service_completed_successfully), porque arrancar el scheduler contra un
+  # esquema sin migrar falla de formas confusas.
+  airflow-init:
+    <<: *airflow-comun
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        mkdir -p /opt/airflow/almacen /opt/airflow/logs
+        chown -R "${AIRFLOW_UID:-50000}:0" /opt/airflow/almacen /opt/airflow/logs /opt/airflow/config
+        exec /entrypoint airflow version
+    environment:
+      <<: *airflow-entorno
+      _AIRFLOW_DB_MIGRATE: 'true'
+      _AIRFLOW_WWW_USER_CREATE: 'true'
+      _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
+      _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+    # Como root para poder hacer chown del volumen, que Docker crea con dueno
+    # root. Es el unico servicio que lo necesita.
+    user: "0:0"
+
+  airflow-apiserver:
+    <<: *airflow-comun
+    command: api-server
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/api/v2/monitor/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: always
+    depends_on:
+      <<: *airflow-depende-de
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-scheduler:
+    <<: *airflow-comun
+    command: scheduler
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: always
+    depends_on:
+      <<: *airflow-depende-de
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-dag-processor:
+    <<: *airflow-comun
+    command: dag-processor
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type DagProcessorJob --hostname "$${HOSTNAME}"']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: always
+    depends_on:
+      <<: *airflow-depende-de
+      airflow-init:
+        condition: service_completed_successfully
+
+volumes:
+  postgres-db-volume:
+  almacen-duckdb:

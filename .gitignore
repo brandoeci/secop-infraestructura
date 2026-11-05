@@ -41,3 +41,8 @@ logs/
 # versiona es el NDJSON de tests/fixtures/, no su Parquet derivado.
 tests/fixtures/bronze/
 tests/fixtures/*.duckdb
+
+# Airflow: estado y logs locales del orquestador, no del proyecto.
+orquestacion/logs/
+orquestacion/config/
+orquestacion/plugins/
