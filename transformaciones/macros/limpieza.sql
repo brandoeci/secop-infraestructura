@@ -2,7 +2,7 @@
 
 {# Quita espacios sobrantes y saltos de linea dentro del propio campo. #}
 {% macro normalizar_texto(c) %}
-    nullif(trim(regexp_replace(cast({{ c }} as STRING), '\s+', ' ', 'g')), '')
+    nullif(trim({{ regex_reemplazar_global('cast(' ~ c ~ ' as STRING)', '\\s+', ' ') }}), '')
 {% endmacro %}
 
 
@@ -26,8 +26,7 @@
   equivalente directo entre los dos motores.
 #}
 {% macro sin_tildes(c) %}
-    trim(regexp_replace(
-        regexp_replace(upper({{ quitar_tildes("coalesce(cast(" ~ c ~ " as STRING), '')") }}),
-                       '[^A-Z0-9 ]', '', 'g'),
-        '\s+', ' ', 'g'))
+    {%- set base = 'upper(' ~ quitar_tildes("coalesce(cast(" ~ c ~ " as STRING), '')") ~ ')' -%}
+    {%- set solo_alfanumerico = regex_reemplazar_global(base, '[^A-Z0-9 ]', '') -%}
+    trim({{ regex_reemplazar_global(solo_alfanumerico, '\\s+', ' ') }})
 {% endmacro %}

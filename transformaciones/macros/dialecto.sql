@@ -157,6 +157,31 @@
   NFD, que separa la letra de su tilde en dos caracteres, y luego borrando
   los diacriticos combinantes (la categoria Unicode \pM).
 #}
+{#
+  Reemplazo global por expresion regular.
+
+  Dos diferencias, no una:
+
+  1. El flag 'g'. En DuckDB `regexp_replace` reemplaza SOLO la primera
+     coincidencia salvo que se pase 'g' como cuarto argumento. En BigQuery
+     `REGEXP_REPLACE` recibe tres argumentos y siempre es global, asi que el
+     cuarto provoca error de aridad.
+
+  2. Las secuencias de escape. BigQuery rechaza '\s' dentro de una cadena
+     normal ("Illegal escape sequence") y exige una cadena cruda: r'\s'.
+     DuckDB no entiende el prefijo r, pero si acepta el backslash tal cual.
+
+  El patron se pasa SIN comillas; el macro las pone segun el motor.
+#}
+{% macro regex_reemplazar_global(expr, patron, reemplazo='') -%}
+    {%- if target.type == 'bigquery' -%}
+        regexp_replace({{ expr }}, r'{{ patron }}', '{{ reemplazo }}')
+    {%- else -%}
+        regexp_replace({{ expr }}, '{{ patron }}', '{{ reemplazo }}', 'g')
+    {%- endif -%}
+{%- endmacro %}
+
+
 {% macro quitar_tildes(expr) -%}
     {%- if target.type == 'bigquery' -%}
         regexp_replace(normalize({{ expr }}, NFD), r'\pM', '')
