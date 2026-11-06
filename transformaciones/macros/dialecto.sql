@@ -79,6 +79,46 @@
   Rangos: DECIMAL(38,2) llega a 10^36 y NUMERIC de BigQuery a ~9,9x10^28.
   El importe mas grande del universo son 6,45x10^15. Sobra sitio en los dos.
 #}
+{#
+  Castea un texto a dinero exacto, con DOS decimales en los dos motores.
+
+  POR QUE NO BASTA CON tipo_dinero()
+  ----------------------------------
+  Porque DECIMAL(38,2) y NUMERIC NO son el mismo tipo:
+
+      DuckDB     DECIMAL(38,2)   dos decimales
+      BigQuery   NUMERIC         es NUMERIC(38,9): NUEVE decimales
+
+  El 2026-11-06, con el modelo ya construido en los dos motores,
+  `comparar_motores.py` lo delato: 6.546.904.372.188.138,10 contra
+  ...138,0993. Los dos exactos, calculando cosas distintas.
+
+  Lo causa UN contrato del universo que trae cuatro decimales,
+  `81380322.6193`. DuckDB lo redondea a .62 al castear; BigQuery se lo queda
+  entero. Diferencia total: 0,0007 pesos. Irrelevante en plata, pero rompe la
+  igualdad exacta, que es justo lo que el proyecto afirma.
+
+  Y no se arregla parametrizando el tipo: BigQuery rechaza
+  `cast(x as NUMERIC(31,2))` con "Parameterized types are not allowed in CAST
+  expressions". Hay que redondear despues de castear.
+
+  LA DECISION, no solo el arreglo
+  -------------------------------
+  Se redondea a dos decimales, que es lo que DuckDB ya hacia en silencio. Un
+  importe en pesos tiene centavos, no diezmilesimas de centavo: los cuatro
+  decimales de ese registro son un artefacto de digitacion. Lo que cambia es
+  que ahora la regla esta ESCRITA en los dos motores, en vez de depender de
+  cual tipo trae cada uno por omision.
+#}
+{% macro castear_dinero(expr) -%}
+    {%- if target.type == 'bigquery' -%}
+        round(safe_cast({{ expr }} as NUMERIC), 2)
+    {%- else -%}
+        try_cast({{ expr }} as DECIMAL(38, 2))
+    {%- endif -%}
+{%- endmacro %}
+
+
 {% macro tipo_dinero() -%}
     {%- if target.type == 'bigquery' -%}NUMERIC{%- else -%}DECIMAL(38, 2){%- endif -%}
 {%- endmacro %}

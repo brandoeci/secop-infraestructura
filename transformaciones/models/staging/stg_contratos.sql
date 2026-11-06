@@ -65,13 +65,13 @@ tipado as (
         -- el supertipo de NUMERIC y FLOAT64 es FLOAT64, asi que un `0.0` aqui
         -- convertiria la columna de vuelta a punto flotante sin que nada
         -- fallara. Con un entero el supertipo sigue siendo NUMERIC.
-        coalesce({{ castear_seguro('valor_del_contrato', tipo_dinero()) }}, 0)
+        coalesce({{ castear_dinero('valor_del_contrato') }}, 0)
             as valor_del_contrato,
-        coalesce({{ castear_seguro('valor_pagado', tipo_dinero()) }}, 0)
+        coalesce({{ castear_dinero('valor_pagado') }}, 0)
             as valor_pagado,
-        coalesce({{ castear_seguro('valor_facturado', tipo_dinero()) }}, 0)
+        coalesce({{ castear_dinero('valor_facturado') }}, 0)
             as valor_facturado,
-        coalesce({{ castear_seguro('valor_pendiente_de_pago', tipo_dinero()) }}, 0)
+        coalesce({{ castear_dinero('valor_pendiente_de_pago') }}, 0)
             as valor_pendiente_de_pago,
 
         _ingestado_en
