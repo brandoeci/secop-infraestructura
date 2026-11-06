@@ -269,6 +269,89 @@ para que el hueco se vea en vez de disfrazarse de dato.
 
 ---
 
+## D7 — El dinero es decimal exacto, no punto flotante
+
+**Decidido el 2026-11-06.** Los cuatro importes del hecho —`valor_contratado`, `valor_pagado`,
+`valor_facturado`, `valor_pendiente`— se castean a `DECIMAL(38,2)` en DuckDB y a `NUMERIC` en
+BigQuery. El macro es `tipo_dinero()` en `transformaciones/macros/dialecto.sql`.
+
+### Por qué
+
+Un importe en pesos es una cantidad decimal con dos cifras, no una medida continua. En punto
+flotante la suma **no es asociativa**: `(a+b)+c` no siempre es `a+(b+c)`. El orden en que el
+motor acumula las filas lo decide el planificador y cambia entre corridas, así que el total no
+era estable **ni dentro del mismo motor**: dos corridas seguidas del mismo DuckDB sobre los
+mismos datos dieron `6.546.904.372.188.142` y `6.546.904.372.188.134`.
+
+Una suma cuyo último dígito depende de cómo el motor reparta los hilos no se puede poner en un
+informe.
+
+### Cuánto costaba, medido
+
+| | |
+|---|---|
+| Suma exacta de los 67.299 contratos | 6.546.904.372.188.138,10 |
+| La misma suma en `FLOAT64` | 6.546.904.372.188.134 |
+| Diferencia | **4,10 pesos** |
+
+Y lo interesante es **de dónde salía esa diferencia**: de un solo dato. El registro corrupto de
+la decisión D5 vale 6.453.840.000.000.000, y a esa magnitud la distancia entre dos `float64`
+consecutivos es de **un peso entero**, así que los centavos de los otros 67.298 contratos no
+caben. Entre los contratos confiables el total son 93.064.372.188.138,10 y en ese rango el
+`FLOAT64` es exacto: su límite para enteros es 2^53, unos 9.007 billones.
+
+O sea que el error no estaba repartido por el tipo de dato: lo causaba un dato. Pero el tipo era
+lo que dejaba que un dato lo causara.
+
+### La trampa de BigQuery
+
+El supertipo de `NUMERIC` y `FLOAT64` en BigQuery es `FLOAT64`. Así que esto:
+
+```sql
+coalesce(safe_cast(valor_del_contrato as NUMERIC), 0.0)
+```
+
+devuelve `FLOAT64` y **deshace el cambio en silencio**: compila, corre y da un número creíble.
+Hay que coalescer contra un entero —`0`—, cuyo supertipo con `NUMERIC` sí es `NUMERIC`. Es el
+tipo de defecto que no falla, solo miente, igual que el `to_hex(md5())` de la migración.
+
+### Lo que NO pasó a decimal, a propósito
+
+`veces_p99_modalidad` y el umbral del p99 se quedan en punto flotante. Un percentil y un
+cociente son referencias estadísticas, no cantidades de dinero: exigirles exactitud no
+significa nada, y dividir decimales arrastra reglas de precisión distintas en cada motor.
+
+### Lo que ganó el proyecto
+
+`etl/comparar_motores.py` **borró su tolerancia**. Nació comparando los importes con una
+diferencia relativa de `1e-12` porque la igualdad exacta no existía; ahora exige igualdad, en
+`Decimal` de Python para no reintroducir el flotante por la puerta de atrás. Es una afirmación
+bastante más fuerte sobre la portabilidad del modelo.
+
+### Y el límite de Power BI, que casi se cuela
+
+El Parquet que lee Power BI **sigue saliendo en `double`**, y eso es deliberado. El tipo
+«Número decimal fijo» de Power BI es un `int64` escalado por 10.000, así que su techo son
+`922.337.203.685.477,58`. El registro corrupto lo pasa **siete veces**. Si el Parquet llevara
+decimales, Power Query los leería como decimal fijo y el refresco reventaría justo en esa fila.
+
+Se midió antes de cambiar el tipo, no después de que fallara un refresco. La conversión está en
+`etl/exportar.py` con el motivo al lado.
+
+Perder exactitud en la exportación no cuesta nada medible: el informe filtra por
+`valor_confiable` en todas sus medidas, y el universo confiable vive en el rango donde el
+`FLOAT64` representa cada peso exactamente. La aritmética que tiene que ser exacta —los tests,
+la bitácora, la comparación entre motores— ya ocurrió antes, en el almacén.
+
+### Qué habría que revisar si algún día se elimina el registro corrupto
+
+Si D5 cambiara y ese contrato dejara de llevar un importe, el máximo del universo pasaría a
+1.370.285.018.012 y entraría de sobra en el decimal fijo de Power BI. Ahí sí valdría la pena
+exportar decimales y declararlos como moneda en el modelo semántico, que daría aritmética exacta
+también en DAX.
+
+---
+
 ## Pendiente de decidir — qué hace el hecho cuando el origen pierde filas
 
 El 2026-11-03 el universo perdió 974 contratos: estaban el 2026-11-01 y ya no cumplen el filtro.

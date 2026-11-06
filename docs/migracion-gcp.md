@@ -159,12 +159,12 @@ pide tarjeta.
 
 Esta es la fase que convierte la migración en un hecho verificado.
 
-**`etl/comparar_motores.py`** (nuevo, calcado de `comparar_salidas.py`): lee las 8 tablas
+**`etl/comparar_motores.py`** (nuevo, calcado de `comparar_salidas.py`): lee las 9 tablas
 gold de DuckDB y de BigQuery y las compara fila a fila. Como las claves ahora son
 idénticas, **se comparan también las claves**, no solo los atributos: es una igualdad más
 fuerte que la que se usó para la migración a dbt.
 
-Criterio: **0 diferencias en las 8 tablas**. Y `dbt build --target cloud` debe reportar los
+Criterio: **0 diferencias en las 9 tablas**. Y `dbt build --target cloud` debe reportar los
 mismos tests que DuckDB, con 4 warn y 0 error.
 
 ---
@@ -221,10 +221,11 @@ lados; los problemas aparecieron al mandárselo a BigQuery de verdad, los dos en
 Resueltos con `regex_reemplazar_global()` en `macros/dialecto.sql`, junto a
 `quitar_tildes()`, que ya hacía lo mismo para los diacríticos.
 
-### Las claves coinciden; los importes no, y está bien
+### Las claves coincidían; los importes no, hasta que cambió el tipo
 
-`etl/comparar_motores.py` compara las 8 tablas gold, las 7 claves subrogadas del
-hecho y los 4 importes. Resultado del 2026-11-04:
+`etl/comparar_motores.py` compara las 9 tablas gold, las 8 claves subrogadas del
+hecho y los 4 importes. Resultado del 2026-11-04, cuando el dinero todavía era
+`FLOAT64` y había 8 tablas y 7 claves:
 
 - **Las 8 tablas, con el mismo número de filas.**
 - **Las 7 sumas de claves subrogadas, idénticas hasta el último dígito** sobre
@@ -239,11 +240,27 @@ sobre los mismos datos dieron `6.546.904.372.188.142` y
 entre hilos cambia de corrida en corrida, así que el total no es estable ni
 dentro del mismo motor.
 
-**Conclusión de modelado, pendiente de aplicar:** los importes no deberían ser
-`FLOAT64` sino `DECIMAL`, que es exacto. Lo hace visible el registro corrupto de
-la decisión D5: ese contrato de 6,45 cuatrillones domina la suma y consume la
-precisión de los otros 67.298. Mientras tanto, `comparar_motores.py` compara con
-tolerancia relativa en vez de fingir una igualdad que no existe.
+**Conclusión de modelado, aplicada el 2026-11-06:** los importes pasaron a
+`DECIMAL(38,2)` en DuckDB y `NUMERIC` en BigQuery, que son exactos. Ver el macro
+`tipo_dinero()` en `transformaciones/macros/dialecto.sql` y la decisión D7.
+
+La medición que lo justifica: la suma exacta de los 67.299 contratos es
+`6.546.904.372.188.138,10` y la de `FLOAT64` daba `...134`. Faltaban **4,10
+pesos**, y faltaban por un solo dato: el registro corrupto de la decisión D5
+lleva el acumulado a 6,45 cuatrillones, un rango donde la distancia entre dos
+`float64` consecutivos es de un peso entero, así que los centavos de los otros
+67.298 contratos no caben. Entre los confiables el total es de 93 billones y ahí
+el `FLOAT64` es exacto: el límite son 2^53, unos 9.007 billones.
+
+Con el tipo exacto, `comparar_motores.py` **borró la tolerancia** y ahora exige
+igualdad, que es una afirmación bastante más fuerte.
+
+Lo que no cambió: el Parquet que lee Power BI sigue saliendo en `double`, y es
+deliberado. El tipo «Número decimal fijo» de Power BI es un `int64` escalado por
+10.000, así que su techo son `922.337.203.685.477,58` y el registro corrupto lo
+pasa siete veces. Si el Parquet llevara decimales, Power Query los leería como
+decimal fijo y el refresco reventaría en esa fila. La aritmética que tiene que
+ser exacta ocurre antes, en el almacén.
 
 ---
 
