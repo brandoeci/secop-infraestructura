@@ -24,7 +24,7 @@ GOLD     dim_entidad · dim_proveedor · dim_fecha · dim_tipo_contrato
          dim_estado · dim_modalidad · dim_categoria
          hecho_contratos                      66.875 filas, MERGE incremental
                      │
-                     │  72 tests  ◄── el gate: si algo rompe, aquí se detiene
+                     │  73 tests  ◄── el gate: si algo rompe, aquí se detiene
                      │
                      │  etl/exportar.py       solo si el gate pasó
                      ▼
@@ -112,7 +112,7 @@ las 8 tablas**, 21 de 21 columnas del hecho idénticas.
 ### 3. El gate bloquea porque la exportación va después
 
 ```
-dbt build      construye y corre 72 tests. Si algo rompe, termina en error.
+dbt build      construye y corre 73 tests. Si algo rompe, termina en error.
 exportar.py    solo corre si lo anterior salió bien.
 ```
 
@@ -130,7 +130,7 @@ Dos severidades:
   el estado conocido del dato público, y el informe los describe en vez de
   ocultarlos.
 
-Hoy (2026-11-06): **68 pasan, 4 avisan, 0 rompen**.
+Hoy (2026-11-06): **69 pasan, 4 avisan, 0 rompen**.
 
 ### 4. No hay Spark, y es a propósito
 
@@ -225,7 +225,7 @@ Verificado a las dos escalas: el gate bloquea con 66.875 filas y con 280.
 
 | Flujo | Cuándo | Qué hace |
 |---|---|---|
-| `.github/workflows/ci.yml` | cada push y PR | Pipeline completo contra el fixture de 280 filas, sin red: ruff, los 72 tests, exportación, y las pruebas de idempotencia y del gate. Menos de un minuto. |
+| `.github/workflows/ci.yml` | cada push y PR | Pipeline completo contra el fixture de 280 filas, sin red: ruff, los 73 tests, exportación, y las pruebas de idempotencia y del gate. Menos de un minuto. |
 | `.github/workflows/pipeline.yml` | cron lunes 06:00 UTC, o a mano | Descarga real de la API (incremental con `--desde`), pipeline completo, y publica el modelo y la bitácora como artefactos. |
 
 Si el gate falla, el workflow falla y GitHub avisa por correo. Eso es lo que
