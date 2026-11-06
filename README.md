@@ -167,7 +167,7 @@ SILVER   stg_contratos                        tipado y limpieza
                      ▼
 GOLD     8 dimensiones + hecho_contratos      MERGE incremental
                      │
-                     │  73 tests  ◄── el gate: si algo rompe, aquí se detiene
+                     │  74 tests  ◄── el gate: si algo rompe, aquí se detiene
                      │
                      │  etl/exportar.py       solo si el gate pasó
                      ▼
@@ -176,6 +176,20 @@ GOLD     8 dimensiones + hecho_contratos      MERGE incremental
 
 Power BI no se conecta a los millones de filas crudas: lee el Parquet ya filtrado, que son
 **~12 MB**.
+
+El grafo de abajo no está dibujado a mano: lo genera `dbt docs generate` leyendo el propio
+código, a partir de los `ref()` que enlazan los modelos entre sí.
+
+![Linaje de los modelos de dbt](docs/capturas/linaje-dbt.png)
+
+Se leen dos ramas independientes —una por cada origen— que solo convergen en
+`hecho_contratos`. Y hay una flecha que **no** está, a propósito: `hecho_contratos` no depende
+de `dim_territorial_vial`. Las dos resuelven la territorial contra el mismo seed, para que dos
+tablas de gold no tengan que construirse en serie. Ver [D6](docs/decisiones.md).
+
+Los nodos de la derecha son los tests: están en el grafo como cualquier modelo, no son un paso
+aparte. `km_red_no_negativo` recibe flechas de dos sitios porque compara la dimensión contra
+silver.
 
 El detalle de cada decisión está en **[docs/arquitectura.md](docs/arquitectura.md)**. Las
 cuatro que definen el pipeline:
@@ -193,11 +207,11 @@ y salen las mismas claves— y estable ante filas nuevas.
 
 ### 2. El gate bloquea porque la exportación va después
 
-`dbt build` construye y corre 73 tests. `etl/exportar.py` solo corre si eso salió bien. Un
+`dbt build` construye y corre 74 tests. `etl/exportar.py` solo corre si eso salió bien. Un
 modelo que no pasa los tests **nunca llega a `data/curated/`**, así que Power BI se queda
 leyendo el último modelo bueno en vez de refrescar sobre datos malos.
 
-Hoy (2026-11-06): **69 pasan, 4 avisan, 0 rompen**. Los cuatro avisos son los defectos del origen ya
+Hoy (2026-11-06): **69 pasan, 5 avisan, 0 rompen**. Los cinco avisos son los defectos del origen ya
 diagnosticados en [docs/calidad-datos.md](docs/calidad-datos.md), no sorpresas.
 
 ### 3. pandas en la ingesta, SQL de silver a gold
@@ -232,7 +246,7 @@ pip install -r requirements.txt
 # 1. Descarga el universo de obra: 66.875 contratos, 20 columnas
 python etl/descargar.py --universo obra
 
-# 2. Pipeline completo: bronze, silver, gold, 73 tests y exportación
+# 2. Pipeline completo: bronze, silver, gold, 74 tests y exportación
 python etl/correr_pipeline.py
 ```
 
@@ -248,7 +262,7 @@ El orden de los pasos del pipeline **es** el control de calidad:
 ```
 aterrizar  ->  dbt build  ->  registrar  ->  exportar
                    │                            │
-              73 tests                  solo si el gate pasó
+              74 tests                  solo si el gate pasó
 ```
 
 El registro en la bitácora corre **pase o falle**, porque una corrida que falló es la que más
@@ -277,7 +291,7 @@ no prueba nada —si el filtro estuviera mal escrito, el caso normal pasaría ig
 
 | Flujo | Cuándo | Qué hace |
 |---|---|---|
-| `ci.yml` | cada push y PR | Pipeline completo contra un fixture de 281 filas, sin red: ruff, los 73 tests, y las pruebas de idempotencia y del gate. Menos de un minuto. |
+| `ci.yml` | cada push y PR | Pipeline completo contra un fixture de 281 filas, sin red: ruff, los 74 tests, y las pruebas de idempotencia y del gate. Menos de un minuto. |
 | `pipeline.yml` | cron lunes 06:00 UTC, o a mano | Descarga real (incremental con `--desde`) y publica el modelo y la bitácora como artefactos. |
 
 Si el gate falla, el workflow falla y GitHub avisa por correo. Antes esto era
@@ -333,7 +347,7 @@ Dos granos que los datos obligaron a decidir:
   propio en el campo, **3.889 proveedores distintos** que usar ese campo como clave habría
   colapsado en una sola fila.
 
-Los 73 tests de dbt validan integridad referencial y reglas de negocio, y **fallan antes de
+Los 74 tests de dbt validan integridad referencial y reglas de negocio, y **fallan antes de
 exportar** si el modelo no es cargable. El detalle está en
 [docs/arquitectura.md](docs/arquitectura.md).
 

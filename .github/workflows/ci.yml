@@ -3,7 +3,7 @@
 # No toca la red ni descarga los 67 MB del universo. Corre el pipeline
 # completo contra el fixture de 281 filas de tests/fixtures/, que es
 # suficiente para comprobar lo que esta corrida tiene que comprobar: que los
-# modelos compilan, que los 73 tests se ejecutan, que el pipeline es
+# modelos compilan, que los 74 tests se ejecutan, que el pipeline es
 # idempotente y que el control de calidad bloquea de verdad.
 #
 # Ese es el motivo de que el umbral de valor_fuera_de_escala sea una razon
@@ -63,7 +63,7 @@ jobs:
               --salida tests/fixtures/bronze/red_vial.parquet
               --esquema vial
 
-      - name: Construir el modelo y correr los 73 tests
+      - name: Construir el modelo y correr los 74 tests
         working-directory: transformaciones
         run: dbt build --profiles-dir . --full-refresh
 
