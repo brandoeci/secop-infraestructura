@@ -277,7 +277,7 @@ no prueba nada —si el filtro estuviera mal escrito, el caso normal pasaría ig
 
 | Flujo | Cuándo | Qué hace |
 |---|---|---|
-| `ci.yml` | cada push y PR | Pipeline completo contra un fixture de 280 filas, sin red: ruff, los 73 tests, y las pruebas de idempotencia y del gate. Menos de un minuto. |
+| `ci.yml` | cada push y PR | Pipeline completo contra un fixture de 281 filas, sin red: ruff, los 73 tests, y las pruebas de idempotencia y del gate. Menos de un minuto. |
 | `pipeline.yml` | cron lunes 06:00 UTC, o a mano | Descarga real (incremental con `--desde`) y publica el modelo y la bitácora como artefactos. |
 
 Si el gate falla, el workflow falla y GitHub avisa por correo. Antes esto era
@@ -377,7 +377,7 @@ transformaciones/    el proyecto dbt: modelos, macros y tests
   models/marts/        gold: el esquema en estrella
   tests/               los controles de calidad con umbral
 .github/workflows/   CI en cada push y pipeline semanal
-tests/fixtures/      muestra de 280 filas para que el CI corra sin red
+tests/fixtures/      muestra de 281 filas para que el CI corra sin red
 powerbi/             el proyecto de Power BI en formato PBIP
 docs/                decisiones y notas técnicas
 data/                todo no versionado
@@ -389,7 +389,7 @@ data/                todo no versionado
 
 Los datos no se versionan. El repositorio se clona y se reproduce corriendo el pipeline.
 
-La única excepción es `tests/fixtures/contratos_muestra.ndjson`: 280 filas y 261 KB de datos
+La única excepción es `tests/fixtures/contratos_muestra.ndjson`: 281 filas y 262 KB de datos
 públicos, fuera de `data/`, para que el CI y las pruebas corran sin red. Está muestreado de
 forma estratificada por modalidad, porque al azar las modalidades raras desaparecen y el p99
 por modalidad deja de tener sentido.

@@ -11,7 +11,7 @@
 # tiene esa condicion escrita. Un fork no puede autenticarse, porque su
 # token lleva otro nombre de repositorio.
 #
-# Corre sobre el fixture de 280 filas, igual que ci.yml: el objetivo es
+# Corre sobre el fixture de 281 filas, igual que ci.yml: el objetivo es
 # comprobar el dialecto, no mover datos. Y usa datasets propios con sufijo
 # del numero de corrida, que se borran al final, para no tocar el bronze real
 # ni el modelo que lee Power BI.

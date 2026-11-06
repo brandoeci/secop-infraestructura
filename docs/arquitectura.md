@@ -225,7 +225,7 @@ Verificado a las dos escalas: el gate bloquea con 66.875 filas y con 280.
 
 | Flujo | Cuándo | Qué hace |
 |---|---|---|
-| `.github/workflows/ci.yml` | cada push y PR | Pipeline completo contra el fixture de 280 filas, sin red: ruff, los 73 tests, exportación, y las pruebas de idempotencia y del gate. Menos de un minuto. |
+| `.github/workflows/ci.yml` | cada push y PR | Pipeline completo contra el fixture de 281 filas, sin red: ruff, los 73 tests, exportación, y las pruebas de idempotencia y del gate. Menos de un minuto. |
 | `.github/workflows/pipeline.yml` | cron lunes 06:00 UTC, o a mano | Descarga real de la API (incremental con `--desde`), pipeline completo, y publica el modelo y la bitácora como artefactos. |
 
 Si el gate falla, el workflow falla y GitHub avisa por correo. Eso es lo que
@@ -251,7 +251,7 @@ interesa tener registrada.
 ## El fixture, y por qué es una excepción consciente
 
 La regla del repo es que no se versionan datos. `tests/fixtures/contratos_muestra.ndjson`
-la rompe a propósito: **280 filas, 261 KB**, fuera de `data/`.
+la rompe a propósito: **281 filas, 262 KB**, fuera de `data/`.
 
 El motivo es que el CI pueda correr el pipeline y sus pruebas **sin red**, y que
 cualquiera que clone el repo pueda hacer `dbt build` sin descargar 67 MB. Son

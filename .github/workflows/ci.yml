@@ -1,7 +1,7 @@
 # Integracion continua: corre en cada push y en cada pull request.
 #
 # No toca la red ni descarga los 67 MB del universo. Corre el pipeline
-# completo contra el fixture de 280 filas de tests/fixtures/, que es
+# completo contra el fixture de 281 filas de tests/fixtures/, que es
 # suficiente para comprobar lo que esta corrida tiene que comprobar: que los
 # modelos compilan, que los 73 tests se ejecutan, que el pipeline es
 # idempotente y que el control de calidad bloquea de verdad.
