@@ -19,7 +19,7 @@ Lo que hace:
                                  igual.
   4. `dbt build`                 repara esa fila y vuelve al estado inicial.
 
-Ademas compara el contenido de las 8 tablas gold por checksum. El checksum es
+Ademas compara el contenido de las 9 tablas gold por checksum. El checksum es
 `bit_xor` sobre el hash de cada fila: no depende del orden en que DuckDB
 devuelva las filas, que puede variar entre corridas por el paralelismo y no
 significaria nada.
@@ -44,6 +44,7 @@ TABLAS = [
     "hecho_contratos",
     "dim_entidad", "dim_proveedor", "dim_fecha",
     "dim_tipo_contrato", "dim_estado", "dim_modalidad", "dim_categoria",
+    "dim_territorial_vial",
 ]
 
 
@@ -173,7 +174,7 @@ def main() -> None:
         sys.exit(1)
     print("IDEMPOTENTE")
     print("  - la segunda corrida no inserto ni actualizo ninguna fila")
-    print("  - el contenido de las 8 tablas gold no cambio")
+    print("  - el contenido de las 9 tablas gold no cambio")
     print("  - y el mecanismo si detecta un cambio real cuando lo hay")
 
 

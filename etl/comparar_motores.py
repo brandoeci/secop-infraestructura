@@ -6,32 +6,38 @@ dos motores. Esta prueba es la que convierte eso en una afirmacion verificable.
 
 Compara tres cosas, de menos a mas exigente:
 
-  1. Filas por tabla en las 8 tablas gold. Es la comprobacion debil: dos
+  1. Filas por tabla en las 9 tablas gold. Es la comprobacion debil: dos
      tablas pueden tener las mismas filas y distinto contenido.
   2. Suma de las CLAVES SUBROGADAS del hecho. Esta es la fuerte. Las claves
      salen de un hash MD5 de la clave natural, asi que si coinciden sobre
      67 mil filas es que el hash, el casteo y el orden de los campos se
      comportan igual en los dos motores. Si las claves coinciden, los joins
      coinciden, y el modelo es el mismo modelo.
-  3. Suma de los importes, CON TOLERANCIA. Y aqui esta el hallazgo: no dan
-     exactamente igual, y no es un error.
+  3. Suma de los importes, EXACTA. Esta comprobacion nacio con tolerancia y
+     la perdio: ahi esta la historia que vale la pena contar.
 
-POR QUE LOS IMPORTES NO CUADRAN AL ULTIMO DIGITO
-------------------------------------------------
-`valor_contratado` es de coma flotante, y la suma de flotantes NO es
-asociativa: (a+b)+c no es siempre a+(b+c). Cada motor reparte las 67.299
-filas entre sus hilos en un orden distinto, asi que acumula en otro orden.
+LOS IMPORTES NO CUADRABAN, Y DEJARON DE NO CUADRAR
+--------------------------------------------------
+Cuando los importes eran FLOAT64, las dos sumas no coincidian en el ultimo
+digito y no era un error de nadie: la suma de flotantes NO es asociativa
+-(a+b)+c no es siempre a+(b+c)- y cada motor reparte las 67.299 filas entre
+sus hilos en un orden distinto, asi que acumula en otro orden.
 
-Medido el 2026-11-04: 6.546.904.372.188.142 contra 6.546.904.372.188.158.
-Difieren en 16 sobre 6,5 cuatrillones, o sea 2,4e-15, que es justo la
-precision de un flotante de 64 bits.
+Medido el 2026-11-04: 6.546.904.372.188.142 contra 6.546.904.372.188.158,
+una diferencia relativa de 2,4e-15, justo la precision de un float de 64
+bits. Y peor: el MISMO DuckDB daba numeros distintos entre dos corridas.
 
-Lo hace visible el registro corrupto de la decision D5: ese contrato de 6,45
-cuatrillones domina la suma y se come la precision de los otros 67.298.
+Lo causaba el registro corrupto de la decision D5. Ese contrato de 6,45
+cuatrillones lleva el acumulado a un rango donde la distancia entre dos
+float64 consecutivos es de un peso entero, asi que los centavos de los otros
+67.298 contratos no caben. La suma exacta es 6.546.904.372.188.138,10 y la de
+FLOAT64 daba ...134: cuatro pesos con diez, perdidos por un unico dato.
 
-La leccion de modelado: el dinero no deberia ser FLOAT64 sino DECIMAL, que es
-exacto. Esta pendiente de decidir, y mientras tanto la prueba compara con
-tolerancia relativa en vez de fingir una igualdad que no existe.
+El 2026-11-06 los importes pasaron a decimal exacto -DECIMAL(38,2) en DuckDB,
+NUMERIC en BigQuery, ver el macro tipo_dinero()- y la tolerancia se pudo
+BORRAR. Ahora la comparacion exige igualdad, que es una afirmacion mucho mas
+fuerte, y la hace en Decimal de Python para no reintroducir por la puerta de
+atras el flotante que se acaba de quitar.
 
 Uso:
   python etl/comparar_motores.py
@@ -43,6 +49,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+from decimal import Decimal
 from pathlib import Path
 
 import duckdb
@@ -53,17 +60,18 @@ PROYECTO = os.environ.get("GCP_PROYECTO", "golden-capsule-446717-s8")
 ESQUEMA = "main_gold"
 
 TABLAS = ("hecho_contratos", "dim_entidad", "dim_proveedor", "dim_fecha",
-          "dim_tipo_contrato", "dim_estado", "dim_modalidad", "dim_categoria")
+          "dim_tipo_contrato", "dim_estado", "dim_modalidad", "dim_categoria",
+          "dim_territorial_vial")
 
 CLAVES = ("entidad_key", "proveedor_key", "tipo_contrato_key", "estado_key",
-          "modalidad_key", "categoria_key", "fecha_firma_key")
+          "modalidad_key", "categoria_key", "territorial_key",
+          "fecha_firma_key")
 
 IMPORTES = ("valor_contratado", "valor_pagado", "valor_facturado",
             "valor_pendiente")
 
-# 1e-12 deja pasar el error de acumulacion de 67 mil flotantes y sigue siendo
-# mil veces mas estricto que cualquier diferencia que importara en el informe.
-TOLERANCIA = 1e-12
+# Ya no hay tolerancia. Los importes son decimales exactos en los dos motores,
+# asi que cualquier diferencia es un defecto y no ruido del tipo de dato.
 
 FALLOS: list[str] = []
 
@@ -115,16 +123,18 @@ def main() -> None:
               f"from `{a.proyecto}.{ESQUEMA}.hecho_contratos`")[0]
     comprobar("id_contrato distintos", d == b, f"{d:,}")
 
-    print("\n3. Suma de importes (con tolerancia: ver el modulo)")
+    print("\n3. Suma de importes (igualdad exacta: ver el modulo)")
     for m in IMPORTES:
         d = duck.execute(
             f"select sum({m}) from {ESQUEMA}.hecho_contratos").fetchone()[0]
         b = en_bq(f"select sum({m}) as s "
                   f"from `{a.proyecto}.{ESQUEMA}.hecho_contratos`")[0]
-        d, b = float(d or 0), float(b or 0)
-        rel = abs(d - b) / abs(d) if d else abs(b)
-        comprobar(m, rel <= TOLERANCIA,
-                  f"diferencia relativa {rel:.2e}  (duckdb {d:,.2f})")
+        # Decimal, no float: pasar por float aqui volveria a introducir el
+        # error de representacion que el cambio de tipo acaba de eliminar.
+        d = Decimal(str(d if d is not None else 0))
+        b = Decimal(str(b if b is not None else 0))
+        comprobar(m, d == b,
+                  f"{d:,}" if d == b else f"duckdb {d:,} vs bigquery {b:,}")
 
     if FALLOS:
         print(f"\nLOS MOTORES NO COINCIDEN EN: {', '.join(FALLOS)}")
