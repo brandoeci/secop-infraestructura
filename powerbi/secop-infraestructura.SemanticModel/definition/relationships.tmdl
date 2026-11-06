@@ -36,3 +36,7 @@ relationship 2cfed0b5-d4f4-45e6-8bef-6ab6e49208eb
 	fromColumn: hecho_contratos.fecha_fin_key
 	toColumn: dim_fecha.fecha_key
 
+
+relationship 4d095a41-3b98-40df-a3ac-5709be378b43
+	fromColumn: hecho_contratos.territorial_key
+	toColumn: dim_territorial_vial.territorial_key

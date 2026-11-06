@@ -1,0 +1,143 @@
+/// Red vial nacional de INVIAS agrupada por territorial. Es una dimension de CONTEXTO: dice cuanta carretera nacional hay en el departamento de la entidad que contrata, que NO es necesariamente donde esta la obra. Sirve para normalizar -gasto por kilometro- no para ubicar contratos. Decision D6.
+table dim_territorial_vial
+	lineageTag: fabaa1ea-328d-44b7-b8b9-8a70c44d30e1
+
+	/// Kilometros de red vial nacional en el contexto actual. Los dos centinelas aportan: 'Sin territorial' cero por diseno, y 'Territorial no informado' los 243 km cuyo territorial llego nulo en el origen.
+	measure 'Km de red vial' = SUM ( dim_territorial_vial[km_red] )
+		formatString: #,0.0
+		lineageTag: 3a1bcc42-64a9-4e02-b47e-f997c2849cd1
+
+	/// Que porcentaje de los km de red NO tiene la superficie informada en el origen. Medido el 2026-11-06: 83,2 % -18.831 de 22.635 km-, que son los 17.875 km marcados 'Por Definir' mas 956 km que llegaron en nulo. Por eso el informe no publica un porcentaje de pavimentacion: diria que el pais esta sin pavimentar cuando lo que pasa es que no se sabe. Solo 9,7 km en todo el pais dicen 'Sin Pavimentar', y son 3 segmentos.
+	measure '% de km sin superficie informada' =
+			DIVIDE (
+			    SUM ( dim_territorial_vial[km_superficie_sin_definir] ),
+			    SUM ( dim_territorial_vial[km_red] )
+			)
+		formatString: 0.0%
+		lineageTag: d8388eb4-d61b-4e62-a6f9-fbd01ee08d5a
+
+	column territorial_key
+		dataType: int64
+		isHidden
+		lineageTag: fc66e081-2536-4b9f-9993-25c2c2a1c8ec
+		summarizeBy: none
+		sourceColumn: territorial_key
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Codigo de la territorial en el diccionario de INVIAS. Los centinelas son -1 y -2. Oculto porque el nombre es lo que se usa para segmentar.
+	column territorial_codigo
+		dataType: int64
+		isHidden
+		lineageTag: c29b0f2b-453d-4921-a840-f2c492703e86
+		summarizeBy: none
+		sourceColumn: territorial_codigo
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Nombre de la territorial de INVIAS.
+	column territorial
+		dataType: string
+		lineageTag: de1fb6ba-5e45-4dac-a67f-d4aceab03179
+		summarizeBy: none
+		sourceColumn: territorial
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Departamento equivalente, escrito como lo escribe SECOP. Vacio en las territoriales que no son un departamento (Ocana, la sede, la ANI) y en los centinelas. Es la columna por la que el hecho cruza.
+	column departamento
+		dataType: string
+		lineageTag: c5f55bb9-4982-4cfa-9c3e-e4cd2320633e
+		summarizeBy: none
+		sourceColumn: departamento
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Verdadero en los codigos 1 a 25, que son departamentos. Falso en Ocana, la sede de INVIAS, la ANI y los centinelas.
+	column es_departamento
+		dataType: boolean
+		lineageTag: 4233560e-e7c1-4932-93c9-5f8bcfa949a8
+		summarizeBy: none
+		sourceColumn: es_departamento
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Numero de segmentos de via. El origen parte los tramos en segmentos: 715 filas para 369 tramos distintos.
+	column segmentos
+		dataType: int64
+		formatString: #,0
+		lineageTag: 081814aa-a3db-4d25-a5aa-f0aa194ca331
+		summarizeBy: sum
+		sourceColumn: segmentos
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Rutas distintas que pasan por la territorial.
+	column rutas
+		dataType: int64
+		formatString: #,0
+		lineageTag: f74d2f50-37b8-49dc-b71d-ce948b1f4729
+		summarizeBy: sum
+		sourceColumn: rutas
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Kilometros de red vial nacional.
+	column km_red
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 43259041-e88e-4f70-9159-baf7e1eeed3f
+		summarizeBy: sum
+		sourceColumn: km_red
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Kilometros con superficie 'Pavimentada' en el origen.
+	column km_pavimentados
+		dataType: double
+		formatString: #,0.0
+		lineageTag: ad85a40a-8590-42aa-89c3-cb10bfdfd031
+		summarizeBy: sum
+		sourceColumn: km_pavimentados
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Kilometros con superficie 'Sin Pavimentar'. Son solo 3 segmentos en todo el pais: el dato no esta, no es que no haya.
+	column km_sin_pavimentar
+		dataType: double
+		formatString: #,0.0
+		lineageTag: f98b0eec-9b4a-4e56-ad31-2fc8ea32613f
+		summarizeBy: sum
+		sourceColumn: km_sin_pavimentar
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Kilometros cuya superficie el origen deja en 'Por Definir'. Son 515 de los 715 segmentos, y es la razon de que no haya un porcentaje de pavimentacion.
+	column km_superficie_sin_definir
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 09024648-5afd-4cd4-b08a-4c9598a9ed7b
+		summarizeBy: sum
+		sourceColumn: km_superficie_sin_definir
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Kilometros de via de primer orden, la red troncal.
+	column km_primer_orden
+		dataType: double
+		formatString: #,0.0
+		lineageTag: fa49c035-aaaf-4e05-8caf-7325825a1f6f
+		summarizeBy: sum
+		sourceColumn: km_primer_orden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_territorial_vial = m
+		mode: import
+		source =
+				let
+				    Origen = Parquet.Document(File.Contents(RutaCurated & "\dim_territorial_vial.parquet"))
+				in
+				    Origen
+
+	annotation PBI_ResultType = Table

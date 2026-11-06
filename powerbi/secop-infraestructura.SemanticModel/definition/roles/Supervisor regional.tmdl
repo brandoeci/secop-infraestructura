@@ -4,5 +4,15 @@ role 'Supervisor regional'
 
 	tablePermission dim_entidad = dim_entidad[departamento] = LOOKUPVALUE ( mapa_usuarios[departamento], mapa_usuarios[correo], USERPRINCIPALNAME () )
 
+	// dim_territorial_vial necesita SU PROPIA regla, y esto es facil de pasar por alto.
+	// Las relaciones van en un solo sentido: de la dimension al hecho. Filtrar
+	// dim_entidad filtra hecho_contratos, pero el filtro NO sube de vuelta por el
+	// hecho hasta dim_territorial_vial. Sin esta regla, [Gasto por km de red] le
+	// mostraria a un supervisor el gasto de SU departamento dividido por los
+	// kilometros de TODA Colombia: un numero que parece bien y esta mal.
+	// Los dos centinelas traen departamento vacio, asi que quedan fuera, que es
+	// lo correcto: no son el departamento de nadie.
+	tablePermission dim_territorial_vial = dim_territorial_vial[departamento] = LOOKUPVALUE ( mapa_usuarios[departamento], mapa_usuarios[correo], USERPRINCIPALNAME () )
+
 	annotation PBI_Id = 5aa8bca56634424b820f9275b34d7901
 

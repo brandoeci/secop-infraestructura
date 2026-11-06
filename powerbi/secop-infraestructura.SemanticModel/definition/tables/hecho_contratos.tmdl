@@ -114,6 +114,11 @@ table hecho_contratos
 
 		annotation PBI_FormatHint = {"isGeneralNumber":true}
 
+	/// Gasto contratado por kilometro de red vial nacional del departamento de la entidad. Es la medida que habilita la decision D6: "quien gasta mas" siempre responde los grandes, "quien gasta mas por kilometro de red" es otra pregunta. SOLO tiene sentido segmentada por dim_territorial_vial: si se segmenta por dim_entidad el numerador se filtra y el denominador no, porque el filtro no viaja de vuelta por el hecho.
+	measure 'Gasto por km de red' = DIVIDE ( [Valor contratado], [Km de red vial] )
+		formatString: #,0
+		lineageTag: 6d10d7be-8e61-4b72-b97d-15359ee6d627
+
 	column id_contrato
 		dataType: string
 		lineageTag: 1a77b07f-a134-4fc7-8eab-6aa52573f45f
@@ -173,6 +178,15 @@ table hecho_contratos
 		lineageTag: 3e714a14-0646-4467-8f5a-832823df4bf1
 		summarizeBy: none
 		sourceColumn: categoria_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column territorial_key
+		dataType: int64
+		isHidden
+		lineageTag: 7b3e5c90-21af-4d6e-9c48-0d6f1a2b3e57
+		summarizeBy: none
+		sourceColumn: territorial_key
 
 		annotation SummarizationSetBy = Automatic
 
