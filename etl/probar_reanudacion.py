@@ -60,7 +60,12 @@ class Api:
     def __init__(self, filas: list[dict]) -> None:
         self.filas = filas
 
-    def pedir(self, _s, params: dict) -> list[dict]:
+    # La firma imita la de D.pedir a proposito, `url` incluida. Un doble que
+    # acepta menos argumentos que la funcion que sustituye deja de probar el
+    # codigo real en cuanto esa funcion crece, y falla por TypeError en vez de
+    # por el defecto que vigila.
+    def pedir(self, _s, params: dict, url: str = D.URL) -> list[dict]:
+        assert url == D.URL, f"el doble no sirve {url}"
         if str(params.get("$select", "")).startswith("count("):
             return [{"total": str(len(self.filas))}]
         ini = int(params["$offset"])
