@@ -190,12 +190,82 @@ La misma bandera se aplica a `fechas_coherentes` (200 filas) y `pagado_excede` (
 
 ---
 
-## Pendiente de decidir — cruce con la red vial de INVÍAS
+## D6 — El cruce con la red vial de INVÍAS, y qué significa
 
-La dimensión `territorial_vial` todavía no está construida. El dataset `ie7y-asdn` (715 filas
-por 18 columnas) tiene `Territorial` y `Departamento`, pero hay que definir por dónde se une
-con los contratos: el departamento de la entidad contratante no es necesariamente el
-departamento donde está la vía. Se decide al construirla.
+**Decidida el 2026-11-05.** Construida como `dim_territorial_vial`.
+
+### Lo primero: la nota anterior estaba equivocada
+
+Decía que el dataset tiene `Territorial` y `Departamento`. **No tiene ninguna columna de
+departamento**, y `territorial` no es un nombre sino **un número**: `territorial = 22`. Igual
+`categoria`, `superficie`, `calzada` y `administrador`. Por eso el cruce llevaba un mes sin
+resolverse: no se estaba mirando el dato real.
+
+Los diccionarios sí existen, publicados en los metadatos del propio dataset:
+
+```
+https://www.datos.gov.co/api/views/ie7y-asdn.json  ->  columns[].description
+territorial :: 1: "Antioquia" ... 25: "Valle del Cauca", 26: "Ocaña",
+               27: "Planta Central", 28: "ANI", 29: "Por Definir", 0: "No Aplica"
+```
+
+Van en el seed `territoriales_invias`, no en un `CASE`: son datos de referencia, y además un
+`CASE` de 30 ramas con `VALUES` no es portable a BigQuery.
+
+### Por dónde une
+
+Por el **nombre del departamento**: el de la entidad contratante contra el del territorial.
+Medido el 2026-11-05, los 25 territoriales que son departamento cruzan, con **un único alias**:
+INVÍAS escribe `Guajira` y SECOP `La Guajira`. Esa equivalencia está declarada como dato en el
+seed, en la columna `departamento_secop`, y no como un `replace` escondido en el SQL.
+
+### Qué es y qué no es
+
+**No es "la vía de este contrato".** El origen no dice en qué vía se gastó cada peso, y no hay
+forma de deducirlo. Es el territorial del departamento donde está **registrada la entidad**, que
+no es lo mismo: una entidad nacional con sede en Bogotá contrata obra en todo el país.
+
+Las cifras lo dicen solas:
+
+| | contratos | valor |
+|---|---|---|
+| En departamentos con red vial nacional | 48.369 (71,9 %) | 54,3 % |
+| Sin territorial | 18.930 (28,1 %) | 45,7 % |
+
+El 45,7 % del dinero queda fuera porque se concentra en Bogotá. **Es una dimensión de contexto,
+y hay que presentarla así.**
+
+### Para qué sirve entonces
+
+Para normalizar. *"Quién gasta más"* siempre responde los grandes; *"quién gasta más por
+kilómetro de red que administra"* es otra pregunta, y cambia el ranking:
+
+| | por gasto total | por gasto por kilómetro |
+|---|---|---|
+| 1.º | Antioquia | **Atlántico** — 290 km, 13.549 millones/km |
+| 2.º | Valle del Cauca | Bolívar |
+| 3.º | Bolívar | Antioquia |
+
+Antioquia es primera en plata absoluta y tercera por kilómetro. Eso es lo que justifica la
+dimensión.
+
+### Dos centinelas, no uno
+
+`-1 Sin territorial` recoge los contratos de departamentos sin red vial nacional, y tiene **cero
+kilómetros a propósito**: si tuviera, el gasto por kilómetro de ese miembro sería un número
+inventado. `-2 Territorial no informado` recoge los 9 segmentos de vía cuyo territorial llegó
+nulo (243 km), que no tienen contratos pero tampoco pueden desaparecer de los totales de red.
+Marcar y no borrar, igual que en D5.
+
+### Por qué no hay `pct_pavimentado`
+
+Porque el origen no lo soporta. De 715 segmentos, **515 traen `superficie = 'Por Definir'`**
+—17.876 de los 22.635 km, el 79 %— y solo **3** dicen `'Sin Pavimentar'`. Un porcentaje
+calculado sobre eso diría que Boyacá tiene el 1,3 % de su red pavimentada, y es falso: lo que
+pasa es que no se sabe.
+
+Se exponen `km_pavimentados`, `km_sin_pavimentar` y `km_superficie_sin_definir` por separado,
+para que el hueco se vea en vez de disfrazarse de dato.
 
 ---
 

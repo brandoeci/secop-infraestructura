@@ -3,7 +3,7 @@
 # No toca la red ni descarga los 67 MB del universo. Corre el pipeline
 # completo contra el fixture de 280 filas de tests/fixtures/, que es
 # suficiente para comprobar lo que esta corrida tiene que comprobar: que los
-# modelos compilan, que los 67 tests se ejecutan, que el pipeline es
+# modelos compilan, que los 72 tests se ejecutan, que el pipeline es
 # idempotente y que el control de calidad bloquea de verdad.
 #
 # Ese es el motivo de que el umbral de valor_fuera_de_escala sea una razon
@@ -55,7 +55,15 @@ jobs:
               --crudo tests/fixtures/contratos_muestra.ndjson
               --salida tests/fixtures/bronze/contratos.parquet
 
-      - name: Construir el modelo y correr los 67 tests
+      # La red vial es estatica y diminuta, asi que el fixture es el dataset
+      # ENTERO: 715 filas. El CI prueba contra el dato real, no una muestra.
+      - name: Aterrizar la red vial en bronze
+        run: python etl/aterrizar.py
+              --crudo tests/fixtures/vial_muestra.ndjson
+              --salida tests/fixtures/bronze/red_vial.parquet
+              --esquema vial
+
+      - name: Construir el modelo y correr los 72 tests
         working-directory: transformaciones
         run: dbt build --profiles-dir . --full-refresh
 
