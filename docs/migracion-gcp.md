@@ -2,7 +2,7 @@
 
 ## Contexto
 
-El pipeline medallion está terminado y probado, corriendo en DuckDB local con 67 tests,
+El pipeline medallion está terminado y probado, corriendo en DuckDB local con 72 tests,
 idempotencia y un gate que bloquea la publicación. El usuario quiere **aprender nube** y
 hacer una migración a GCP, y tuvo el buen criterio de parar una tanda de trabajo que
 apareció en `gcp/` sin versionar para hacerlo por fases.
@@ -12,7 +12,7 @@ dos motores**, de modo que cambiar de DuckDB a BigQuery sea una bandera:
 
 ```bash
 dbt build                   # DuckDB local: 3 s, gratis
-dbt build --target cloud    # BigQuery: los MISMOS modelos y los MISMOS 67 tests
+dbt build --target cloud    # BigQuery: los MISMOS modelos y los MISMOS tests
 ```
 
 Eso es portabilidad real y no una copia del resultado. En entrevista se cuenta en una
@@ -165,7 +165,7 @@ idénticas, **se comparan también las claves**, no solo los atributos: es una i
 fuerte que la que se usó para la migración a dbt.
 
 Criterio: **0 diferencias en las 8 tablas**. Y `dbt build --target cloud` debe reportar los
-mismos 67 tests con 63 pass y 4 warn.
+mismos tests que DuckDB, con 4 warn y 0 error.
 
 ---
 
@@ -190,7 +190,7 @@ Se hizo sin activar la facturación, y eso condiciona el diseño. Lo que el
 | | |
 |---|---|
 | `SELECT` y `CREATE OR REPLACE TABLE ... AS SELECT` | sí |
-| Los 10 modelos y los 57 tests | sí |
+| Los modelos y los tests completos, el conteo de ese día | sí |
 | `MERGE`, `UPDATE`, `DELETE` | **no**: *"DML queries are not allowed in the free tier"* |
 | Bucket de Cloud Storage | no, necesita facturación |
 | Permanencia de las tablas | caducan a los 60 días |

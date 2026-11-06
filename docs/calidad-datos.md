@@ -250,7 +250,7 @@ contratos**. Ni uno viene de un contrato vigente.
 
 El gate bloqueó otra vez: `data/curated/` se quedó en los Parquet del 2026-11-01 y la bitácora
 anotó `FAIL` con `filas_gold = 68.273`. Se reparó con `python etl/correr_pipeline.py
---full-refresh`, que reconstruye gold desde el bronze actual: **67 tests, 63 pasan, 4 avisan, 0
+--full-refresh`, que reconstruye gold desde el bronze actual: **67 nodos -10 modelos + 57 tests-, 63 pasan, 4 avisan, 0
 rompen; gold 67.299 = bronze 67.299; 0 huérfanos.**
 
 **Queda una decisión de modelado pendiente**, porque `--full-refresh` repara pero no previene: la
@@ -267,17 +267,17 @@ Los cuatro avisos también se movieron con el universo. El 2026-11-03: 637 en ce
 ## 7. Los controles, ya ejecutables
 
 Todo lo anterior era prosa: un diagnóstico escrito que nadie comprobaba en cada corrida. Ahora
-son **67 tests de dbt** que corren con `dbt build`, y la exportación a `data/curated/` va
+son **72 tests de dbt** que corren con `dbt build`, y la exportación a `data/curated/` va
 **después**, así que un modelo que no los pasa nunca llega a Power BI.
 
-Estado medido el **2026-10-29**: 63 pasan, 4 avisan, 0 rompen.
+Estado medido el **2026-11-06**: 68 pasan, 4 avisan, 0 rompen.
 
 ### Lo que rompe la corrida (`severity: error`)
 
 | Control | Por qué bloquea |
 |---|---|
 | `id_contrato` único y no nulo | Si se duplica, el grano "un contrato" deja de sostenerse y toda suma queda mal |
-| Integridad referencial del hecho a las 7 dimensiones | Una huérfana deja filas invisibles en el informe sin avisar |
+| Integridad referencial del hecho a las 8 dimensiones | Una huérfana deja filas invisibles en el informe sin avisar |
 | `entidad_key` y `proveedor_key` no nulos | Son las dos dimensiones por las que el informe pregunta "quién contrata" |
 | [`anio_fuera_de_ventana`](../transformaciones/tests/anio_fuera_de_ventana.sql) | Una fecha fuera de 2015–2060 no es un dato feo, es una tabla de fechas inservible (ver sección 5) |
 | [`valor_fuera_de_escala`](../transformaciones/tests/valor_fuera_de_escala.sql) | Ningún contrato debe superar 100.000× la mediana de su modalidad |

@@ -124,7 +124,7 @@ porque no hay nada estable contra lo que hacerlo. Ahora la clave sale de un hash
 natural: determinista, sin estado y estable ante filas nuevas.
 
 **Dos: nada bloqueaba un dato malo.** Había un documento con los problemas de calidad, pero era
-prosa que nadie comprobaba. Ahora son 67 tests de dbt, y la exportación a los Parquet que lee
+prosa que nadie comprobaba. Ahora son 72 tests de dbt, y la exportación a los Parquet que lee
 Power BI va **después** de los tests: un modelo que no pasa nunca llega al informe.
 
 **Tres: nada lo corría y un fallo era silencioso.** Era `python etl/transformar.py` cuando me
@@ -188,7 +188,7 @@ diferencias en las ocho tablas**.
 | Contratos terminados sin pago reportado | 5.234 de 13.885 |
 | Tamaño del modelo en Parquet | ~12 MB |
 | Tamaño del dataset completo en crudo | ~26 GB |
-| Tests de calidad sobre el modelo | 67: 63 pasan, 4 avisan |
+| Tests de calidad sobre el modelo | 72: 68 pasan, 4 avisan |
 | Duración del pipeline completo | ~15 s |
 | Filas que el MERGE toca en una segunda corrida | 0 |
 | El registro corrupto, veces la mediana de su modalidad | 190.693.033× |

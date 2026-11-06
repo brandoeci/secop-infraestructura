@@ -165,9 +165,9 @@ SILVER   stg_contratos                        tipado y limpieza
          int_contratos_calidad                banderas de calidad
                      │
                      ▼
-GOLD     7 dimensiones + hecho_contratos      MERGE incremental
+GOLD     8 dimensiones + hecho_contratos      MERGE incremental
                      │
-                     │  67 tests  ◄── el gate: si algo rompe, aquí se detiene
+                     │  72 tests  ◄── el gate: si algo rompe, aquí se detiene
                      │
                      │  etl/exportar.py       solo si el gate pasó
                      ▼
@@ -193,11 +193,11 @@ y salen las mismas claves— y estable ante filas nuevas.
 
 ### 2. El gate bloquea porque la exportación va después
 
-`dbt build` construye y corre 67 tests. `etl/exportar.py` solo corre si eso salió bien. Un
+`dbt build` construye y corre 72 tests. `etl/exportar.py` solo corre si eso salió bien. Un
 modelo que no pasa los tests **nunca llega a `data/curated/`**, así que Power BI se queda
 leyendo el último modelo bueno en vez de refrescar sobre datos malos.
 
-Hoy: **63 pasan, 4 avisan, 0 rompen**. Los cuatro avisos son los defectos del origen ya
+Hoy (2026-11-06): **68 pasan, 4 avisan, 0 rompen**. Los cuatro avisos son los defectos del origen ya
 diagnosticados en [docs/calidad-datos.md](docs/calidad-datos.md), no sorpresas.
 
 ### 3. pandas en la ingesta, SQL de silver a gold
@@ -232,7 +232,7 @@ pip install -r requirements.txt
 # 1. Descarga el universo de obra: 66.875 contratos, 20 columnas
 python etl/descargar.py --universo obra
 
-# 2. Pipeline completo: bronze, silver, gold, 67 tests y exportación
+# 2. Pipeline completo: bronze, silver, gold, 72 tests y exportación
 python etl/correr_pipeline.py
 ```
 
@@ -248,7 +248,7 @@ El orden de los pasos del pipeline **es** el control de calidad:
 ```
 aterrizar  ->  dbt build  ->  registrar  ->  exportar
                    │                            │
-              67 tests                  solo si el gate pasó
+              72 tests                  solo si el gate pasó
 ```
 
 El registro en la bitácora corre **pase o falle**, porque una corrida que falló es la que más
@@ -277,7 +277,7 @@ no prueba nada —si el filtro estuviera mal escrito, el caso normal pasaría ig
 
 | Flujo | Cuándo | Qué hace |
 |---|---|---|
-| `ci.yml` | cada push y PR | Pipeline completo contra un fixture de 280 filas, sin red: ruff, los 67 tests, y las pruebas de idempotencia y del gate. Menos de un minuto. |
+| `ci.yml` | cada push y PR | Pipeline completo contra un fixture de 280 filas, sin red: ruff, los 72 tests, y las pruebas de idempotencia y del gate. Menos de un minuto. |
 | `pipeline.yml` | cron lunes 06:00 UTC, o a mano | Descarga real (incremental con `--desde`) y publica el modelo y la bitácora como artefactos. |
 
 Si el gate falla, el workflow falla y GitHub avisa por correo. Antes esto era
@@ -333,7 +333,7 @@ Dos granos que los datos obligaron a decidir:
   propio en el campo, **3.889 proveedores distintos** que usar ese campo como clave habría
   colapsado en una sola fila.
 
-Los 67 tests de dbt validan integridad referencial y reglas de negocio, y **fallan antes de
+Los 72 tests de dbt validan integridad referencial y reglas de negocio, y **fallan antes de
 exportar** si el modelo no es cargable. El detalle está en
 [docs/arquitectura.md](docs/arquitectura.md).
 
