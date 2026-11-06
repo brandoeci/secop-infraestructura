@@ -33,14 +33,19 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from descargar import COLUMNAS_OBRA  # noqa: E402  la lista de columnas vive alli
+from descargar import COLUMNAS_OBRA, COLUMNAS_VIAL  # noqa: E402  viven alli
+
+# Bronze aterriza dos origenes distintos. El esquema esperado se elige, no
+# se adivina: si el origen deja de traer una columna, tiene que notarse como
+# un aviso y no como una columna que desaparece en silencio.
+ESQUEMAS = {"obra": COLUMNAS_OBRA, "vial": COLUMNAS_VIAL}
 
 CRUDO = Path("data/raw/obra.ndjson")
 SALIDA = Path("data/bronze/contratos.parquet")
 
 
-def leer_ndjson(ruta: Path) -> pd.DataFrame:
-    """Lee el NDJSON a texto plano, con las 20 columnas siempre presentes.
+def leer_ndjson(ruta: Path, columnas: tuple[str, ...]) -> pd.DataFrame:
+    """Lee el NDJSON a texto plano, con todas las columnas siempre presentes.
 
     Se lee linea por linea y no con pd.read_json porque este fuerza una
     inferencia de tipos que aqui no queremos: un `valor_pagado` que venga
@@ -65,14 +70,14 @@ def leer_ndjson(ruta: Path) -> pd.DataFrame:
     # La API omite las claves nulas, asi que una columna que venga vacia en
     # todo el lote simplemente no existe. Se reindexan las 20 para que el
     # esquema de bronze sea estable corrida tras corrida.
-    faltantes = [c for c in COLUMNAS_OBRA if c not in df.columns]
+    faltantes = [c for c in columnas if c not in df.columns]
     if faltantes:
         print(f"aviso: el origen no trajo {len(faltantes)} columnas: "
               f"{', '.join(faltantes)}")
-    df = df.reindex(columns=list(COLUMNAS_OBRA))
+    df = df.reindex(columns=list(columnas))
 
     # Columnas inesperadas: el origen cambio y conviene enterarse, no ignorarlo.
-    sobrantes = [c for c in pd.DataFrame(filas).columns if c not in COLUMNAS_OBRA]
+    sobrantes = [c for c in pd.DataFrame(filas).columns if c not in columnas]
     if sobrantes:
         print(f"aviso: el origen trajo {len(sobrantes)} columnas no pedidas: "
               f"{', '.join(sobrantes[:10])}")
@@ -80,8 +85,9 @@ def leer_ndjson(ruta: Path) -> pd.DataFrame:
     return df.astype("string")
 
 
-def aterrizar(crudo: Path, salida: Path) -> None:
-    df = leer_ndjson(crudo)
+def aterrizar(crudo: Path, salida: Path,
+              columnas: tuple[str, ...] = COLUMNAS_OBRA) -> None:
+    df = leer_ndjson(crudo, columnas)
 
     # Metadatos de ingesta. Van con guion bajo delante para que se distingan a
     # simple vista de las columnas que vienen del origen.
@@ -93,7 +99,7 @@ def aterrizar(crudo: Path, salida: Path) -> None:
     df["_origen"] = crudo.name
 
     esquema = pa.schema(
-        [(c, pa.string()) for c in COLUMNAS_OBRA]
+        [(c, pa.string()) for c in columnas]
         + [("_ingestado_en", pa.timestamp("ms")), ("_origen", pa.string())]
     )
     tabla = pa.Table.from_pandas(df, schema=esquema, preserve_index=False)
@@ -105,7 +111,7 @@ def aterrizar(crudo: Path, salida: Path) -> None:
     print(f"bronze: {len(df):,} filas x {len(df.columns)} columnas "
           f"-> {salida} ({mb:.1f} MB)")
 
-    nulos = df[list(COLUMNAS_OBRA)].isna().sum()
+    nulos = df[list(columnas)].isna().sum()
     vacias = nulos[nulos == len(df)]
     if len(vacias):
         print(f"aviso: {len(vacias)} columnas llegaron completamente vacias: "
@@ -117,11 +123,13 @@ def main() -> None:
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--crudo", type=Path, default=CRUDO)
     p.add_argument("--salida", type=Path, default=SALIDA)
+    p.add_argument("--esquema", choices=sorted(ESQUEMAS), default="obra",
+                   help="que juego de columnas se espera del crudo")
     a = p.parse_args()
     if not a.crudo.exists():
         raise SystemExit(f"falta {a.crudo}. Corra primero:\n"
                          "  python etl/descargar.py --universo obra")
-    aterrizar(a.crudo, a.salida)
+    aterrizar(a.crudo, a.salida, ESQUEMAS[a.esquema])
 
 
 if __name__ == "__main__":

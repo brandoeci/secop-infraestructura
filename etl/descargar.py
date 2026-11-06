@@ -83,6 +83,35 @@ COLUMNAS_OBRA = (
 )
 
 
+# --- Red vial nacional de INVIAS (dataset ie7y-asdn) ---
+#
+# Otro dataset, otra URL. Es estatico y diminuto -715 tramos- asi que no
+# necesita filtro: se baja entero.
+#
+# Se excluye `multiline`, la geometria de cada tramo, que es un MultiLineString
+# con cientos de coordenadas. No se usa (no hay mapa en el informe) y multiplica
+# por veinte el tamano del archivo. Bronze es fiel al origen en las columnas que
+# el proyecto declara, no en todas las que existan.
+#
+# Las columnas llegan CODIFICADAS: territorial=22, superficie=1. Los
+# diccionarios estan en los metadatos del dataset y se decodifican en silver,
+# no aqui: bronze guarda lo que el origen entrego.
+URL_VIAL = "https://www.datos.gov.co/resource/ie7y-asdn.json"
+
+COLUMNAS_VIAL = (
+    "codigo_tramo", "ruta", "nombre_ruta", "nombre_tramo", "sector",
+    "territorial", "categoria", "superficie", "calzada", "administrador",
+    "grupo_administrador_vial", "shape__length",
+    "distancia_inicial", "distancia_final",
+    "poste_de_referencia_inicial", "poste_de_referencia_final", "fuente",
+)
+
+
+def universo_vial() -> tuple[str, None]:
+    """Devuelve el ($select, $where) de la red vial. Sin filtro: son 715."""
+    return ", ".join(COLUMNAS_VIAL), None
+
+
 def universo_obra() -> tuple[str, str]:
     """Devuelve el ($select, $where) del universo de obra e infraestructura."""
     tipos = ", ".join(f"'{t}'" for t in TIPOS_OBRA)
@@ -105,11 +134,11 @@ def sesion() -> requests.Session:
     return s
 
 
-def pedir(s: requests.Session, params: dict) -> list[dict]:
+def pedir(s: requests.Session, params: dict, url: str = URL) -> list[dict]:
     """GET con reintentos y espera exponencial ante fallos transitorios."""
     for intento in range(1, MAX_INTENTOS + 1):
         try:
-            r = s.get(URL, params=params, timeout=TIEMPO_ESPERA)
+            r = s.get(url, params=params, timeout=TIEMPO_ESPERA)
             if r.status_code == 200:
                 return r.json()
             # 429 = demasiadas peticiones, 5xx = problema del servidor: se
@@ -132,12 +161,12 @@ def pedir(s: requests.Session, params: dict) -> list[dict]:
     raise AssertionError("inalcanzable")
 
 
-def contar(s: requests.Session, where: str | None) -> int:
+def contar(s: requests.Session, where: str | None, url: str = URL) -> int:
     """Cuenta filas en el servidor. No descarga datos."""
     params = {"$select": "count(1) as total"}
     if where:
         params["$where"] = where
-    return int(pedir(s, params)[0]["total"])
+    return int(pedir(s, params, url)[0]["total"])
 
 
 def huella(select: str | None, where: str | None) -> str:
@@ -177,7 +206,7 @@ def lineas_validas(ruta: Path) -> int:
 
 
 def descargar(objetivo: int, pagina: int, select: str | None, where: str | None,
-              salida: Path, reiniciar: bool) -> None:
+              salida: Path, reiniciar: bool, url: str = URL) -> None:
     salida.parent.mkdir(parents=True, exist_ok=True)
     estado_ruta = salida.with_suffix(salida.suffix + ".estado.json")
     actual = huella(select, where)
@@ -200,7 +229,7 @@ def descargar(objetivo: int, pagina: int, select: str | None, where: str | None,
     ya = lineas_validas(salida)
     s = sesion()
 
-    disponibles = contar(s, where)
+    disponibles = contar(s, where, url)
     total = min(objetivo, disponibles) if objetivo else disponibles
     print(f"filas que cumplen el filtro en la API: {disponibles:,}")
     print(f"a descargar: {total:,} | ya en disco: {ya:,}")
@@ -240,7 +269,7 @@ def descargar(objetivo: int, pagina: int, select: str | None, where: str | None,
             if where:
                 params["$where"] = where
 
-            filas = pedir(s, params)
+            filas = pedir(s, params, url)
             if not filas:
                 print("la API no devolvio mas filas; se detiene aqui.")
                 break
@@ -258,14 +287,14 @@ def descargar(objetivo: int, pagina: int, select: str | None, where: str | None,
                 # este archivo no se puede continuar.
                 "disponibles": disponibles,
                 "select": select, "where": where, "orden": ORDEN,
-                "url": URL, "pagina": pagina,
+                "url": url, "pagina": pagina,
             }, ensure_ascii=False, indent=2), encoding="utf-8")
             print(f"  {ya:,}/{total:,}")
 
     # El origen se actualiza a diario y puede moverse a mitad de la descarga.
     # Si paso, este archivo mezcla dos instantes y puede traer repetidos: el
     # test de unicidad lo detectaria, pero es mejor decirlo aqui.
-    al_cerrar = contar(s, where)
+    al_cerrar = contar(s, where, url)
     if al_cerrar != disponibles:
         print(f"  aviso: el origen cambio durante la descarga "
               f"({disponibles:,} -> {al_cerrar:,}). La proxima corrida "
@@ -290,9 +319,10 @@ def main() -> None:
                    help="borra lo descargado y empieza de cero")
     p.add_argument("--contar", action="store_true",
                    help="solo cuenta filas en el servidor y sale")
-    p.add_argument("--universo", choices=["obra"], default=None,
+    p.add_argument("--universo", choices=["obra", "vial"], default=None,
                    help="usa un filtro predefinido en vez de --select/--where; "
-                        "'obra' = los 66.831 contratos de infraestructura (D1+D2)")
+                        "'obra' = los contratos de infraestructura (D1+D2); "
+                        "'vial' = los 715 tramos de la red vial de INVIAS")
     p.add_argument("--desde", metavar="AAAA-MM-DD", default=None,
                    help="con --universo, solo los contratos firmados desde esa "
                         "fecha. Es la descarga incremental: el pipeline programado "
@@ -302,7 +332,18 @@ def main() -> None:
     if a.desde and a.universo is None:
         raise SystemExit("--desde solo aplica con --universo obra.")
 
-    select, where, filas = a.select, a.where, a.filas
+    select, where, filas, url = a.select, a.where, a.filas, URL
+
+    if a.universo == "vial":
+        if a.select or a.where:
+            raise SystemExit("--universo ya define el select; no lo combine "
+                             "con --select ni --where.")
+        select, where = universo_vial()
+        url = URL_VIAL
+        filas = 0  # son 715: siempre se bajan todos
+        if a.salida == Path("data/raw/muestra_10k.ndjson"):
+            a.salida = Path("data/raw/vial.ndjson")
+
     if a.universo == "obra":
         if a.select or a.where:
             raise SystemExit("--universo ya define el select y el where; "
@@ -322,9 +363,9 @@ def main() -> None:
                         if a.desde else Path("data/raw/obra.ndjson"))
 
     if a.contar:
-        print(f"{contar(sesion(), where):,}")
+        print(f"{contar(sesion(), where, url):,}")
         return
-    descargar(filas, a.pagina, select, where, a.salida, a.reiniciar)
+    descargar(filas, a.pagina, select, where, a.salida, a.reiniciar, url)
 
 
 if __name__ == "__main__":
