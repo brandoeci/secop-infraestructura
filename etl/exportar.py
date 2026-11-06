@@ -36,6 +36,24 @@ TABLAS = [
     "dim_territorial_vial",
 ]
 
+# Los importes viven en gold como DECIMAL(38,2) -exactos- y salen a Parquet
+# como DOUBLE. No es un descuido: es el limite del tipo "Numero decimal fijo"
+# de Power BI, que es un int64 escalado por 10.000 y por tanto tiene techo en
+# 922.337.203.685.477,58.
+#
+# El registro corrupto del universo vale 6.453.840.000.000.000: pasa ese techo
+# SIETE veces. Si el Parquet llevara decimales, Power Query los leeria como
+# decimal fijo y el refresco reventaria en esa fila.
+#
+# Perder exactitud aqui no cuesta nada medible: el informe filtra por
+# valor_confiable en todas sus medidas, y el universo confiable suma 93
+# billones, un rango donde el FLOAT64 representa cada peso exactamente -el
+# limite son 2^53, unos 9.007 billones-. La aritmetica que tiene que ser
+# exacta -los tests, la bitacora, la comparacion entre motores- ya ocurrio
+# antes, en el almacen.
+IMPORTES = ("valor_contratado", "valor_pagado", "valor_facturado",
+            "valor_pendiente")
+
 
 def exportar(almacen: Path, salida: Path) -> None:
     con = duckdb.connect(str(almacen), read_only=True)
@@ -63,7 +81,12 @@ def exportar(almacen: Path, salida: Path) -> None:
             # contrato: sirve para que el MERGE distinga una fila que cambio
             # de una que volvio a llegar igual. El modelo de Power BI no lo
             # declara y no tiene por que verlo.
-            columnas = "* exclude (hash_atributos)" if t == "hecho_contratos" else "*"
+            if t == "hecho_contratos":
+                a_double = ", ".join(
+                    f"cast({c} as DOUBLE) as {c}" for c in IMPORTES)
+                columnas = (f"* exclude (hash_atributos) replace ({a_double})")
+            else:
+                columnas = "*"
             con.execute(
                 f"copy (select {columnas} from main_gold.{t}) "
                 f"to '{destino.as_posix()}' (format parquet, compression snappy)")
