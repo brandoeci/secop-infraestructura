@@ -56,13 +56,22 @@ tipado as (
 
         -- medidas. El cero no es un valor faltante en este dataset: es la
         -- forma en que la fuente reporta 'todavia no se ha pagado'.
-        coalesce({{ castear_seguro('valor_del_contrato', tipo_real()) }}, 0.0)
+        --
+        -- Van en tipo_dinero() -decimal exacto-, no en punto flotante: la
+        -- suma de un FLOAT64 depende del orden en que el motor acumule las
+        -- filas. El macro trae la medicion y el motivo.
+        --
+        -- Y se coalescen contra `0`, un ENTERO, no contra `0.0`. En BigQuery
+        -- el supertipo de NUMERIC y FLOAT64 es FLOAT64, asi que un `0.0` aqui
+        -- convertiria la columna de vuelta a punto flotante sin que nada
+        -- fallara. Con un entero el supertipo sigue siendo NUMERIC.
+        coalesce({{ castear_seguro('valor_del_contrato', tipo_dinero()) }}, 0)
             as valor_del_contrato,
-        coalesce({{ castear_seguro('valor_pagado', tipo_real()) }}, 0.0)
+        coalesce({{ castear_seguro('valor_pagado', tipo_dinero()) }}, 0)
             as valor_pagado,
-        coalesce({{ castear_seguro('valor_facturado', tipo_real()) }}, 0.0)
+        coalesce({{ castear_seguro('valor_facturado', tipo_dinero()) }}, 0)
             as valor_facturado,
-        coalesce({{ castear_seguro('valor_pendiente_de_pago', tipo_real()) }}, 0.0)
+        coalesce({{ castear_seguro('valor_pendiente_de_pago', tipo_dinero()) }}, 0)
             as valor_pendiente_de_pago,
 
         _ingestado_en

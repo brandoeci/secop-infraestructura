@@ -47,6 +47,43 @@
 {%- endmacro %}
 
 
+{#
+  El tipo del DINERO. Exacto, no de punto flotante.
+
+  POR QUE
+  -------
+  Un importe en pesos es una cantidad decimal con dos cifras, no una medida
+  continua. En FLOAT64 la suma no es asociativa: el resultado depende del
+  orden en que el motor acumule las filas, y ese orden lo decide el
+  planificador. Medido en este proyecto: la MISMA consulta en el MISMO DuckDB
+  devolvio 6.546.904.372.188.142 en una corrida y ...134 en la siguiente.
+
+  Medido tambien cuanto cuesta: la suma en DOUBLE de los 67.299 contratos da
+  6.546.904.372.188.134 y la exacta 6.546.904.372.188.138,10. Faltan 4,10
+  pesos, y faltan porque el registro corrupto lleva el acumulado a 6,5
+  cuatrillones: ahi la distancia entre dos float64 consecutivos es de UN peso,
+  asi que los centavos no caben. Entre los 67.298 contratos confiables el
+  total es de 93 billones y en ese rango el FLOAT64 es exacto.
+
+  O sea: el error no estaba repartido, lo causaba un solo dato. Pero una suma
+  cuyo ultimo digito depende de como el motor reparta los hilos no se puede
+  poner en un informe, y menos defender en una entrevista.
+
+  LA TRAMPA DE BIGQUERY
+  ---------------------
+  El supertipo de NUMERIC y FLOAT64 en BigQuery es FLOAT64. Asi que
+  `coalesce(safe_cast(x as NUMERIC), 0.0)` devuelve FLOAT64 y deshace el
+  cambio EN SILENCIO: compila, corre y da un numero creible. Hay que
+  coalescer contra un entero -`0`-, cuyo supertipo con NUMERIC si es NUMERIC.
+
+  Rangos: DECIMAL(38,2) llega a 10^36 y NUMERIC de BigQuery a ~9,9x10^28.
+  El importe mas grande del universo son 6,45x10^15. Sobra sitio en los dos.
+#}
+{% macro tipo_dinero() -%}
+    {%- if target.type == 'bigquery' -%}NUMERIC{%- else -%}DECIMAL(38, 2){%- endif -%}
+{%- endmacro %}
+
+
 {# El tipo de punto flotante. DuckDB no conoce FLOAT64 ni BigQuery DOUBLE. #}
 {% macro tipo_real() -%}
     {%- if target.type == 'bigquery' -%}FLOAT64{%- else -%}DOUBLE{%- endif -%}

@@ -74,8 +74,14 @@ referencia_p99 as (
         --
         -- El p99 se calcula solo sobre las filas confiables, para que el
         -- registro corrupto no infle el umbral que deberia delatarlo.
-        {{ percentil('case when valor_confiable then valor_del_contrato end',
-                     0.99) }}
+        --
+        -- El umbral y la razon se calculan en punto flotante a proposito,
+        -- aunque los importes sean decimales exactos: un percentil y un
+        -- cociente son referencias estadisticas, no cantidades de dinero.
+        -- Exigirles exactitud no significa nada, y dividir decimales arrastra
+        -- reglas de precision distintas en cada motor.
+        {{ percentil('case when valor_confiable then cast(valor_del_contrato as '
+                     ~ tipo_real() ~ ') end', 0.99) }}
             over (partition by modalidad_de_contratacion) as p99_modalidad
 
     from marcado
@@ -87,7 +93,8 @@ select
 
     case
         when p99_modalidad > 0
-        then round(valor_del_contrato / p99_modalidad, 2)
+        then round(cast(valor_del_contrato as {{ tipo_real() }})
+                       / p99_modalidad, 2)
     end as veces_p99_modalidad
 
 from referencia_p99
