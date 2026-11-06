@@ -76,6 +76,16 @@ models:
               arguments:
                   to: ref('dim_categoria')
                   field: categoria_key
+      - name: territorial_key
+        description: >
+          Territorial de INVIAS del departamento de la entidad contratante.
+          Nunca es nula: lo que no cruza apunta al centinela 'Sin territorial'.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                  to: ref('dim_territorial_vial')
+                  field: territorial_key
 
       - name: fecha_firma_key
         description: FK a dim_fecha. Nula fuera de la ventana 2015-2060.
@@ -189,3 +199,25 @@ models:
         data_tests: [unique, not_null]
       - name: categoria
         data_tests: [unique, not_null]
+
+  - name: dim_territorial_vial
+    description: >
+      Dimension de CONTEXTO, no de hecho: relaciona cada contrato con la red
+      vial nacional del departamento de su entidad contratante, que no es
+      necesariamente donde esta la via. Ver la cabecera del modelo.
+
+      Habilita la medida normalizada que el informe no podia calcular: gasto
+      contratado por kilometro de red vial del departamento.
+    columns:
+      - name: territorial_key
+        data_tests: [unique, not_null]
+      - name: territorial_codigo
+        data_tests: [unique, not_null]
+      - name: territorial
+        data_tests: [unique, not_null]
+      - name: km_red
+        description: >
+          Kilometros de red vial nacional en ese territorial. Los dos
+          centinelas tienen cero. Que no sea negativo lo comprueba
+          tests/km_red_no_negativo.sql.
+        data_tests: [not_null]

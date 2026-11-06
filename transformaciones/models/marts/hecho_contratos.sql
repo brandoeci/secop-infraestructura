@@ -26,6 +26,24 @@ with contratos as (
 
 ),
 
+-- Unica union del modelo, y es contra DATOS DE REFERENCIA (30 filas), no
+-- contra una dimension: hace falta para traducir el nombre del departamento
+-- al codigo de territorial, que es la clave natural desde la que se calcula
+-- el hash. Sin esta traduccion no hay clave natural que hashear.
+--
+-- Se compara sin tildes y en mayusculas porque los dos origenes escriben los
+-- nombres a su manera. El unico caso que difiere de verdad es Guajira contra
+-- La Guajira, y esa equivalencia esta declarada como dato en el seed.
+territoriales as (
+
+    select
+        {{ sin_tildes('departamento_secop') }} as departamento_comparable,
+        codigo
+    from {{ ref('territoriales_invias') }}
+    where departamento_secop is not null
+
+),
+
 final as (
 
     select
@@ -43,6 +61,16 @@ final as (
              then {{ clave_subrogada(['estado_contrato']) }} end           as estado_key,
         case when modalidad_de_contratacion is not null
              then {{ clave_subrogada(['modalidad_de_contratacion']) }} end as modalidad_key,
+
+        -- Dimension de CONTEXTO: es el territorial del departamento donde
+        -- esta registrada la entidad, no el de la via del contrato, porque el
+        -- origen no dice cual es. Ver dim_territorial_vial.
+        --
+        -- A diferencia de las demas claves, esta nunca es nula: lo que no
+        -- cruza apunta al centinela -1 ('Sin territorial'). Un nulo diria
+        -- 'no se'; el centinela dice 'se comprobo y no tiene', que es
+        -- distinto y es el 28% de los contratos.
+        {{ clave_subrogada(['coalesce(t.codigo, -1)']) }} as territorial_key,
         case when codigo_de_categoria_principal is not null
              then {{ clave_subrogada(['codigo_de_categoria_principal']) }} end as categoria_key,
 
@@ -80,7 +108,8 @@ final as (
         -- No se exporta a data/curated/: es metadato del pipeline, no un
         -- atributo del contrato, y el modelo de Power BI no lo necesita.
         {{ clave_subrogada([
-            'nit_entidad', 'nombre_entidad', 'identidad_proveedor',
+            'nit_entidad', 'nombre_entidad', 'departamento',
+            'identidad_proveedor',
             'tipo_de_contrato', 'estado_contrato', 'modalidad_de_contratacion',
             'codigo_de_categoria_principal', 'objeto_del_contrato',
             'fecha_de_firma', 'fecha_de_inicio_del_contrato',
@@ -88,7 +117,9 @@ final as (
             'valor_facturado', 'valor_pendiente_de_pago',
         ]) }} as hash_atributos
 
-    from contratos
+    from contratos c
+    left join territoriales t
+        on t.departamento_comparable = {{ sin_tildes('c.departamento') }}
 
 )
 

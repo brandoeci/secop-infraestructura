@@ -33,6 +33,7 @@ TABLAS = [
     "hecho_contratos",
     "dim_entidad", "dim_proveedor", "dim_fecha",
     "dim_tipo_contrato", "dim_estado", "dim_modalidad", "dim_categoria",
+    "dim_territorial_vial",
 ]
 
 
