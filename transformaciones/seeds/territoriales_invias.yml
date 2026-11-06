@@ -1,0 +1,30 @@
+version: 2
+
+seeds:
+  - name: territoriales_invias
+    description: >
+      Diccionario de la columna `territorial` del dataset ie7y-asdn de INVIAS,
+      que llega codificada como numero. Las etiquetas salen de los metadatos
+      del propio dataset:
+      https://www.datos.gov.co/api/views/ie7y-asdn.json -> columns[].description
+
+      Va como seed y no como CASE en el SQL por dos razones. Primera, son datos
+      de referencia y no logica. Segunda, un CASE con 30 ramas no es portable
+      entre DuckDB y BigQuery sin un macro de dialecto, porque `VALUES` con
+      alias de columnas no existe en BigQuery.
+    columns:
+      - name: codigo
+        description: El valor que trae la columna `territorial` del origen.
+        data_tests: [not_null, unique]
+      - name: nombre
+        description: La etiqueta de INVIAS. Los codigos 1 a 25 son departamentos.
+        data_tests: [not_null]
+      - name: departamento_secop
+        description: >
+          El mismo departamento escrito como lo escribe SECOP II, que es por
+          donde se cruza. Vacio cuando el territorial no es un departamento
+          (Ocana es una ciudad; Planta Central y ANI son entidades).
+
+          El unico caso donde los dos nombres difieren es el 13: INVIAS dice
+          'Guajira' y SECOP 'La Guajira'. Tenerlo aqui como dato y no como un
+          replace escondido en el SQL es lo que hace que se pueda revisar.

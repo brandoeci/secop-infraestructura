@@ -33,3 +33,34 @@ sources:
           - name: _ingestado_en
             description: Hora UTC en que etl/aterrizar.py escribio esta fila.
             data_tests: [not_null]
+
+      - name: red_vial
+        description: >
+          Un segmento de la red vial nacional por fila, tal como lo devolvio la
+          API de Socrata (dataset ie7y-asdn de INVIAS). Estatico: 715 filas.
+
+          El grano NO es el tramo. Hay 715 filas y solo 369 `codigo_tramo`
+          distintos, porque los tramos vienen partidos en segmentos. Por eso la
+          dimension agrega a nivel de territorial y no intenta una clave por
+          tramo.
+
+          Varias columnas llegan codificadas como numero -territorial,
+          categoria, superficie, calzada, administrador-. Los diccionarios
+          estan en los metadatos del dataset y se aplican en silver: bronze
+          guarda lo que el origen entrego.
+
+          No se trae `multiline`, la geometria de cada segmento: no hay mapa en
+          el informe y multiplica por veinte el tamano del archivo.
+        columns:
+          - name: codigo_tramo
+            description: Codigo del tramo. NO es unico, ver la descripcion.
+            data_tests: [not_null]
+          - name: territorial
+            description: >
+              Regional de INVIAS, codificada. Se traduce con el seed
+              territoriales_invias. Los codigos 1 a 25 son departamentos.
+          - name: shape__length
+            description: Longitud del segmento en metros.
+          - name: _ingestado_en
+            description: Hora UTC en que etl/aterrizar.py escribio esta fila.
+            data_tests: [not_null]

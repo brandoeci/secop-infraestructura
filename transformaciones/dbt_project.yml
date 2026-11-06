@@ -22,6 +22,12 @@ test-paths:  ["tests"]
 target-path: "target"
 clean-targets: ["target", "dbt_packages"]
 
+seeds:
+  secop:
+    # Datos de referencia, no resultados: viven en silver junto al staging que
+    # los consume.
+    +schema: silver
+
 models:
   secop:
     staging:
