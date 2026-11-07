@@ -267,7 +267,7 @@ Los cuatro avisos también se movieron con el universo. El 2026-11-03: 637 en ce
 ## 7. Los controles, ya ejecutables
 
 Todo lo anterior era prosa: un diagnóstico escrito que nadie comprobaba en cada corrida. Ahora
-son **74 tests de dbt** que corren con `dbt build`, y la exportación a `data/curated/` va
+son **75 tests de dbt** que corren con `dbt build`, y la exportación a `data/curated/` va
 **después**, así que un modelo que no los pasa nunca llega a Power BI.
 
 Estado medido el **2026-11-06**: 69 pasan, 5 avisan, 0 rompen.

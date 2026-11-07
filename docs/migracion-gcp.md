@@ -2,7 +2,7 @@
 
 ## Contexto
 
-El pipeline medallion está terminado y probado, corriendo en DuckDB local con 74 tests,
+El pipeline medallion está terminado y probado, corriendo en DuckDB local con 75 tests,
 idempotencia y un gate que bloquea la publicación. El usuario quiere **aprender nube** y
 hacer una migración a GCP, y tuvo el buen criterio de parar una tanda de trabajo que
 apareció en `gcp/` sin versionar para hacerlo por fases.

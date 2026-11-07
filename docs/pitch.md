@@ -124,7 +124,7 @@ porque no hay nada estable contra lo que hacerlo. Ahora la clave sale de un hash
 natural: determinista, sin estado y estable ante filas nuevas.
 
 **Dos: nada bloqueaba un dato malo.** Había un documento con los problemas de calidad, pero era
-prosa que nadie comprobaba. Ahora son 74 tests de dbt, y la exportación a los Parquet que lee
+prosa que nadie comprobaba. Ahora son 75 tests de dbt, y la exportación a los Parquet que lee
 Power BI va **después** de los tests: un modelo que no pasa nunca llega al informe.
 
 **Tres: nada lo corría y un fallo era silencioso.** Era `python etl/transformar.py` cuando me

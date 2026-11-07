@@ -352,31 +352,124 @@ también en DAX.
 
 ---
 
-## Pendiente de decidir — qué hace el hecho cuando el origen pierde filas
+## D8 — El hecho refleja el presente, no el histórico
 
-El 2026-11-03 el universo perdió 974 contratos: estaban el 2026-11-01 y ya no cumplen el filtro.
-Las dimensiones son `table` y se reconstruyeron sin ellos; `hecho_contratos` es `incremental` con
-MERGE y se los quedó. Resultado: 448 claves apuntando a filas de dimensión que ya no existen, y
-los cuatro tests de integridad referencial en rojo. Está medido en `docs/calidad-datos.md`
-sección 6.
+**Decidido el 2026-11-06.** Un contrato que desaparece del origen desaparece del modelo. Lo
+implementa el `post_hook` de `hecho_contratos`, que llama a
+`borrar_filas_retiradas('int_contratos_calidad', 'id_contrato')`.
 
-Se reparó con `--full-refresh`, que reconstruye gold desde el bronze actual. Pero eso repara, no
-previene: el origen se mueve todas las semanas, y reconstruir de cero cada vez deja sin sentido
-la carga incremental que es justamente lo que vale la pena mostrar.
+Esto cierra la decisión que estaba abierta aquí abajo desde el incidente del 2026-11-03, cuando
+el universo perdió 974 contratos y quedaron 448 claves apuntando a filas de dimensión que ya no
+existían.
 
-Las dos salidas son defendibles y **cambian las cifras del informe**, así que es una decisión de
-alcance, no de implementación:
+### Por qué esta y no conservar el histórico
 
-**A. El hecho refleja el origen.** Un contrato que sale del universo sale del modelo. El MERGE
-necesita además borrar lo que no está en bronze (`WHEN NOT MATCHED BY SOURCE THEN DELETE`). Es
-coherente con que las dimensiones ya sean `table`, y el informe responde "qué hay hoy".
-Riesgo: con `--desde`, bronze es parcial, así que el borrado solo puede correr cuando bronze es
-el universo completo. Si eso se confunde, se vacía el hecho.
+Las dimensiones ya son `table`: se reconstruyen de cero en cada corrida y no acumulan versiones.
+Que el hecho conserve filas que sus dimensiones ya no tienen es justamente lo que producía las
+claves huérfanas. Hacer que el hecho también refleje el presente es la opción **coherente con el
+modelo que ya existe**.
 
-**B. El hecho conserva el histórico.** Un contrato retirado se queda, marcado. Entonces las
-dimensiones no pueden reconstruirse desde cero: tienen que acumular, que es el camino hacia
-SCD Type 2 (pendiente 5). El informe responde "qué se ha contratado", y hay que explicar por qué
-muestra contratos que SECOP ya no publica.
+La alternativa —conservar la fila marcada como retirada— obligaba a SCD Type 2 en `dim_entidad` y
+a que **todas** las medidas del informe filtraran por `vigente`. Era más trabajo para responder
+una pregunta que el informe no hace: el informe responde *qué se está contratando*, no *qué
+sabíamos en octubre*.
 
-Mientras no se decida, la reparación documentada es `python etl/correr_pipeline.py
---full-refresh`.
+Consecuencia aceptada: **las cifras se mueven entre corridas.** Por eso toda cifra del README y
+de este documento va fechada.
+
+### El intento que borró la tabla entera
+
+El primer intento fue la forma obvia: una estrategia incremental propia que añadía
+`WHEN NOT MATCHED BY SOURCE THEN DELETE` dentro del MERGE. DuckDB 2.0.0 lo soporta y la sintaxis
+era correcta.
+
+Dejó `hecho_contratos` en **cero filas**.
+
+El motivo es que el origen del MERGE **no es el universo**. El modelo filtra su propio origen con
+`is_incremental()` para que solo lleguen las filas nuevas o cambiadas —de eso vive la
+idempotencia—. Sobre el mismo bronze ese delta es 0 filas. Y `not matched by source` contra un
+origen vacío significa "ninguna fila del destino coincide": borrar todo.
+
+> `WHEN NOT MATCHED BY SOURCE` solo es correcto si el origen del MERGE es el estado completo del
+> presente. Con carga por delta, el borrado tiene que ir en una sentencia aparte que compare
+> contra el modelo de origen completo.
+
+De ahí que el borrado viva en un `post_hook` y no en el MERGE.
+
+### Lo más grave no fue el borrado
+
+Fue que **los 74 tests pasaron en verde sobre la tabla vacía.** Todos. `not_null`, `unique` y
+`relationships` se cumplen por vacuidad: sobre una tabla sin filas no hay nada que violar. El gate
+—la pieza entera de la que depende que Power BI no lea datos malos— habría dejado publicar un
+modelo sin un solo contrato.
+
+Lo cierra el test nuevo `tests/hecho_completo.sql`, y su umbral no es inventado: es la invariante
+real del modelo. `int_contratos_calidad` tiene una fila por contrato y el hecho sale de ahí con
+una unión contra 30 filas de referencia, así que la correspondencia es 1 a 1. Vigila las dos
+direcciones:
+
+| | |
+|---|---|
+| `en_gold < en_silver` | se perdieron filas. Es el caso de la tabla vacía: 0 < 67.299 |
+| `en_gold > en_silver` | quedaron filas retiradas sin borrar, o sea D8 no se cumplió |
+
+Son **75 tests**, no 74.
+
+### La guarda, que es la parte delicada
+
+`aterrizar.py` **sobrescribe** bronze con lo que le den, y `descargar.py --desde` baja solo los
+contratos firmados después de una fecha. Con bronze parcial, "borrar lo que no está en el origen"
+se lleva el resto del universo.
+
+Y hay una razón más de fondo: **una descarga incremental no puede saber qué retiró SECOP.** Solo
+trae lo que existe. La ausencia de un contrato en un tramo no dice nada sobre si sigue publicado.
+Detectar un retiro exige la descarga completa.
+
+Por eso el borrado está detrás de la variable `origen_completo`, **que por defecto es `false`**:
+
+- `pipeline.yml` en cron no pasa `inputs`, así que `desde` llega vacío, la descarga es completa y
+  el paso siguiente recibe `--origen-completo`. D8 activo.
+- Un despacho manual con `--desde` **no** lo recibe. D8 en pausa.
+- `correr_pipeline.py` lo deduce solo cuando él mismo descargó: `--descargar` sin `--desde`.
+
+La asimetría del valor por defecto es deliberada. Si se olvida la bandera en una corrida completa,
+quedan filas retiradas de más y el gate lo grita. Si el valor por defecto fuera `true` y se
+olvidara en una corrida parcial, el hecho se vaciaría. **Se elige el fallo que avisa sobre el
+fallo que destruye.**
+
+### Las dos salidas son seguras
+
+Esto es lo que hace defendible el diseño. Si el origen pierde un contrato:
+
+| Con permiso para borrar | Sin permiso |
+|---|---|
+| el hecho lo borra, el modelo queda consistente y se publica | el hecho lo conserva, la dimensión no, la clave queda huérfana y **la integridad referencial pone el gate en rojo** |
+| repara | se niega a publicar |
+
+En ningún camino se publica un modelo inconsistente. El segundo es el incidente del 2026-11-03, y
+ahora se puede reproducir a voluntad en vez de descubrirlo un lunes.
+
+### La prueba
+
+`python etl/probar_borrado.py`, seis pasos:
+
+1. `--full-refresh` → 67.299 filas.
+2. Se quita un contrato de bronze, simulando que SECOP lo retiró.
+3. Corrida **sin** declarar el origen completo → el contrato sigue ahí, y el gate falla por
+   `relationships_hecho_contratos_proveedor_key`. La prueba afirma *cuál* test falló, no solo que
+   algo falló.
+4. Corrida **declarando** el origen completo → 67.298 filas, y la que falta es exactamente esa.
+5. **Control negativo**: se inyecta en el hecho una fila que no está en el origen y
+   `hecho_completo` tiene que fallar. Sin este paso el 4 no prueba nada: un test que no sabe
+   fallar siempre está verde.
+6. Se restaura bronze y se vuelve a 67.299.
+
+`etl/probar_idempotencia.py` sigue pasando: el MERGE recibe 0 filas y las 9 tablas gold mantienen
+el mismo checksum. El borrado no rompió la idempotencia porque sobre un origen completo y sin
+cambios no hay nada que borrar.
+
+### Lo que esta decisión cancela
+
+El **SCD Type 2 en `dim_entidad`** sale del pendiente. Dependía de que el hecho conservara
+histórico; no lo conserva. Si algún día el informe necesita responder "qué sabíamos entonces", la
+pieza que hay que construir primero es el registro persistente de claves, y se revisa D8.

@@ -2,7 +2,7 @@
 #
 # Este workflow existe para que la portabilidad no sea una afirmacion del
 # README sino algo que se rompe solo si deja de ser cierta. ci.yml corre el
-# pipeline contra DuckDB; este corre los mismos 12 modelos y los mismos 73
+# pipeline contra DuckDB; este corre los mismos 12 modelos y los mismos 75
 # tests contra BigQuery, y falla si el SQL deja de ser portable.
 #
 # SIN LLAVES. No hay ningun secreto de GCP guardado en GitHub. Se usa
