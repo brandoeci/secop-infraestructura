@@ -73,12 +73,18 @@ jobs:
       - name: Correr el pipeline
         env:
           FULL_REFRESH: ${{ inputs.full_refresh }}
+          DESDE: ${{ inputs.desde }}
         run: |
-          if [ "$FULL_REFRESH" = "true" ]; then
-            python etl/correr_pipeline.py --full-refresh
-          else
-            python etl/correr_pipeline.py
-          fi
+          # --origen-completo habilita el borrado de los contratos retirados
+          # (D8). Solo se pasa si el paso anterior bajo el universo ENTERO,
+          # es decir si no hubo --desde: aterrizar.py sobrescribe bronze, asi
+          # que con --desde bronze es un tramo y borrar "lo que no esta en el
+          # origen" se llevaria todo el resto del universo.
+          ARGS=""
+          if [ "$FULL_REFRESH" = "true" ]; then ARGS="$ARGS --full-refresh"; fi
+          if [ -z "$DESDE" ];            then ARGS="$ARGS --origen-completo"; fi
+          echo "correr_pipeline.py$ARGS"
+          python etl/correr_pipeline.py $ARGS
 
       - name: Resumen de la corrida
         if: always()

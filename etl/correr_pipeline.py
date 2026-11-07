@@ -70,6 +70,12 @@ def main() -> None:
                    help="con --descargar, solo los contratos firmados desde esa fecha")
     p.add_argument("--full-refresh", action="store_true",
                    help="reconstruye gold de cero en vez de hacer MERGE")
+    p.add_argument("--origen-completo", action="store_true",
+                   help="declara que bronze es el universo completo del presente. "
+                        "Habilita el borrado de los contratos retirados (D8). Se "
+                        "activa solo si esta corrida bajo todo, es decir "
+                        "--descargar SIN --desde. Con bronze parcial no se borra "
+                        "nada, porque borraria el resto del universo.")
     a = p.parse_args()
 
     inicio = time.time()
@@ -91,7 +97,18 @@ def main() -> None:
 
     n += 1
     paso(n, "Transformacion y control de calidad (dbt)")
-    codigo_gate = dbt(*(["--full-refresh"] if a.full_refresh else []))
+    # Si esta corrida bajo el universo entero, bronze esta completo y el
+    # borrado de D8 puede correr. Si solo bajo un tramo con --desde, no.
+    origen_completo = a.origen_completo or (a.descargar and not a.desde)
+    if origen_completo:
+        print("   bronze declarado completo: se borraran los contratos retirados (D8)")
+    else:
+        print("   bronze sin declarar completo: no se borra nada (D8 en pausa)")
+
+    codigo_gate = dbt(
+        "--vars", f'{{"origen_completo": {str(origen_completo).lower()}}}',
+        *(["--full-refresh"] if a.full_refresh else []),
+    )
 
     n += 1
     paso(n, "Registro de la corrida en la bitacora")

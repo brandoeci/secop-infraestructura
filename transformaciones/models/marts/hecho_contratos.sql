@@ -3,6 +3,7 @@
         materialized         = 'incremental',
         unique_key           = 'id_contrato',
         incremental_strategy = 'merge',
+        post_hook            = "{{ borrar_filas_retiradas('int_contratos_calidad', 'id_contrato') }}",
     )
 }}
 
@@ -12,6 +13,20 @@
 -- las claves subrogadas son deterministas: con las claves posicionales de
 -- antes, una entidad nueva renumeraba las demas y el MERGE habria actualizado
 -- filas antiguas con claves que apuntaban a otra entidad.
+--
+-- El MERGE inserta y actualiza, pero no sabe que hacer con una fila que ya no
+-- esta en el origen. De eso se encarga el post_hook: borra las claves que
+-- desaparecieron. Es la decision D8, el hecho refleja el PRESENTE de SECOP.
+--
+-- El borrado NO puede ir como 'when not matched by source' dentro del MERGE,
+-- porque el origen del MERGE es el delta de aqui abajo y no el universo: con
+-- un delta de 0 filas, esa clausula borra la tabla completa. Pasó de verdad.
+-- El motivo esta escrito en macros/borrar_filas_retiradas.sql.
+--
+-- La consecuencia es que las cifras se mueven entre corridas, y por eso toda
+-- cifra del README va fechada. La alternativa -conservar la fila marcada como
+-- retirada- se descarto en D8: obligaba a SCD Type 2 en dim_entidad y a que
+-- cada medida del informe filtrara por 'vigente'.
 --
 -- Las claves foraneas no se resuelven con un JOIN contra cada dimension, sino
 -- recalculando el mismo hash sobre la misma clave natural. Como la clave
