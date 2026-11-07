@@ -22,12 +22,6 @@ venv/
 # cifrado contra este usuario de Windows. No sirve en otra maquina.
 .pbi/
 
-# Lanzador local, no es parte del proyecto
-abrir-claude.bat
-
-# Notas de contexto privadas: se quedan en la maquina, no en el repo
-CLAUDE.md
-
 # Artefactos de dbt: se regeneran con 'dbt build'.
 # target/ trae manifest.json y run_results.json, que son la fuente de la bitacora
 # de corridas, no algo que se versione a mano.
