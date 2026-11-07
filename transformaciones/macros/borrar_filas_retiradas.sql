@@ -41,8 +41,14 @@
 
 {%- if not var('origen_completo', false) %}
 
-    {# No-op portable. El post_hook tiene que ser SQL valido igual. #}
-    select 1 where 1 = 0   -- borrado omitido: origen_completo no esta declarado
+    {#
+      No-op. El post_hook tiene que ser SQL valido igual, y tiene que valer en
+      los DOS motores. Un 'select 1 where 1 = 0' no sirve: BigQuery no acepta
+      WHERE sin FROM, aunque DuckDB lo deje pasar. Y un 'delete ... where 1=0'
+      tampoco, porque el nivel gratuito de BigQuery bloquea el DML incluso
+      cuando no toca ninguna fila. Un select de una constante vale en ambos.
+    #}
+    select 'borrado omitido: origen_completo no esta declarado' as nota
 
 {%- else %}
 
