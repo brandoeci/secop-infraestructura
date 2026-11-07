@@ -1,0 +1,151 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "0b430dd9411490563d9c",
+  "position": {
+    "x": 0,
+    "y": 133.75,
+    "z": 4,
+    "height": 586.25,
+    "width": 341.25,
+    "tabOrder": 4
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_territorial_vial"
+                    }
+                  },
+                  "Property": "territorial"
+                }
+              },
+              "queryRef": "dim_territorial_vial.territorial",
+              "nativeQueryRef": "territorial"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_territorial_vial"
+                    }
+                  },
+                  "Property": "km_red"
+                }
+              },
+              "queryRef": "dim_territorial_vial.km_red",
+              "nativeQueryRef": "km_red"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "hecho_contratos"
+                    }
+                  },
+                  "Property": "Gasto por km de red"
+                }
+              },
+              "queryRef": "hecho_contratos.Gasto por km de red",
+              "nativeQueryRef": "Gasto por km de red"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "dim_territorial_vial"
+                  }
+                },
+                "Property": "territorial"
+              }
+            },
+            "direction": "Ascending"
+          }
+        ]
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Red vial y gasto por kilometro'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "dbe4dd6554e74a509305",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "dim_territorial_vial"
+              }
+            },
+            "Property": "territorial"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "0f4826c8174576e0e5a2",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "dim_territorial_vial"
+              }
+            },
+            "Property": "km_red"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "a4da9a057d88caaee641",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "hecho_contratos"
+              }
+            },
+            "Property": "Gasto por km de red"
+          }
+        },
+        "type": "Advanced"
+      }
+    ]
+  }
+}
