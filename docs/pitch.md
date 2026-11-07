@@ -6,6 +6,9 @@ el repositorio: si alguien pregunta de dónde sale una, se corre el código.
 El informe, por si lo piden en la llamada:
 [`docs/informe-secop-infraestructura.pdf`](informe-secop-infraestructura.pdf).
 
+Para **postulaciones escritas y LinkedIn** hay una versión en formato STAR, redactada para que la
+entienda también alguien que no es técnico: [`star.md`](star.md).
+
 ---
 
 ## El párrafo
