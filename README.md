@@ -27,10 +27,11 @@ salen del patrón.
 
 ## El informe
 
-Cuatro páginas, una por pregunta. Las capturas salen del informe publicado.
+Cinco páginas, una por pregunta. Las capturas salen del PDF, que es el mismo informe.
+Cifras medidas el **2026-11-07**; el universo se mueve, así que van fechadas.
 
-📄 **[Ver el informe completo en PDF](docs/informe-secop-infraestructura.pdf)** — las cuatro
-páginas tal como se ven en Power BI, sin necesidad de cuenta ni de instalar nada.
+📄 **[Ver el informe completo en PDF](docs/informe-secop-infraestructura.pdf)** — las
+cinco páginas tal como se ven en Power BI, sin necesidad de cuenta ni de instalar nada.
 
 > El informe está publicado en Power BI Service y se actualiza desde `data/curated/`, pero el
 > enlace anónimo no está disponible: el tenant desde el que se publica tiene deshabilitada la
@@ -41,21 +42,21 @@ páginas tal como se ven en Power BI, sin necesidad de cuenta ni de instalar nad
 ![Página de resumen del informe](docs/capturas/01-resumen.png)
 
 Las tres cifras de cabecera y la brecha entre lo contratado y lo pagado por departamento.
-Bogotá concentra el 41,8 % del valor contratado.
+Bogotá concentra el 43,4 % del valor contratado.
 
 ### Quién contrata
 
 ![Página de entidades contratantes](docs/capturas/02-quien-contrata.png)
 
-**INVÍAS es la entidad que más contrata** por valor, con $10,59 billones. Y la plata la mueven
-las regiones: **66,1 % territorial** contra 30,3 % nacional.
+**INVÍAS es la entidad que más contrata** por valor, con $14,26 billones: el 15,3 % de todo.
+Y la plata la mueven las regiones: **64,7 % territorial** contra 32,4 % nacional.
 
 ### Ejecución
 
 ![Página de ejecución](docs/capturas/03-ejecucion.png)
 
 El `% ejecutado` solo se calcula donde el pago es exigible, por eso el gráfico muestra únicamente
-los estados *Cerrado* y *Terminado*. La tarjeta publica lo que normalmente se omite: **el 33,7 %
+los estados *Cerrado* y *Terminado*. La tarjeta publica lo que normalmente se omite: **el 33,3 %
 del valor con pago exigible no reporta ejecución**.
 
 ### Atípicos
@@ -69,6 +70,22 @@ veces el p99.
 La primera fila de la tabla es el registro corrupto, y se lee sin explicación: `valor_confiable`
 en `False`, la columna sin filtrar en 6,45 cuatrillones y `Valor contratado` **en blanco**, porque
 todas las medidas de dinero lo excluyen.
+
+### Red vial
+
+![Página de red vial](docs/capturas/05-red-vial.png)
+
+El cruce con la red vial nacional de **INVÍAS**: 22.635 km repartidos por territorial, y el
+gasto contratado por kilómetro de carretera. Atlántico encabeza con **13.549 millones por km**;
+Antioquia, que tiene cinco veces más carretera, va en 6.755 millones.
+
+La tarjeta del **83,2 %** es el hallazgo incómodo: ese porcentaje de los kilómetros **no tiene
+la superficie informada en el origen**. Por eso el informe no publica un porcentaje de
+pavimentación — diría que el país está sin pavimentar cuando lo que pasa es que no se sabe.
+
+Ojo con lo que mide: el departamento es el de la **entidad que contrata**, no el de la obra. El
+dataset de INVÍAS no trae departamento sino una territorial numérica, y el cruce se hace por ahí.
+Está explicado en la decisión [D6](docs/decisiones.md).
 
 ---
 
@@ -439,7 +456,7 @@ Instrucciones de apertura y verificación en [`powerbi/README.md`](powerbi/READM
 ## Estado
 
 Hecho de punta a punta: la descarga, la exploración, las decisiones de modelado, el pipeline
-medallion en dbt, el modelo semántico y **las cuatro páginas del informe, publicadas**.
+medallion en dbt, el modelo semántico y **las cinco páginas del informe, publicadas**.
 
 Lo que se cerró en la capa de ingeniería de datos, con la prueba al lado:
 

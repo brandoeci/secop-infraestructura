@@ -21,7 +21,7 @@ El informe, por si lo piden en la llamada:
 > unión de ambos, y lo puedo defender con números en vez de con una corazonada.
 >
 > Con eso armé un **esquema en estrella** —un hecho de sesenta y siete mil contratos y siete
-> dimensiones— con dbt sobre DuckDB, que alimenta un informe de Power BI de cuatro páginas.
+> dimensiones— con dbt sobre DuckDB, que alimenta un informe de Power BI de cinco páginas.
 >
 > Y el hallazgo que más me gusta no es de negocio, es de **calidad de datos**: al sumar el valor
 > contratado me daba cuatro veces el PIB del país. Era **un solo registro mal digitado que valía
