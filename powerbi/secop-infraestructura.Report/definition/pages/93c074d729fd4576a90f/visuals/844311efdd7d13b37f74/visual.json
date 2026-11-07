@@ -2,7 +2,7 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
   "name": "844311efdd7d13b37f74",
   "position": {
-    "x": 948.57142857142867,
+    "x": 668.33333333333337,
     "y": 0,
     "z": 1000,
     "height": 231.42857142857144,
@@ -70,5 +70,37 @@
       }
     },
     "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "443c654a275910a0ce15",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "dim_fecha"
+              }
+            },
+            "Property": "anio_mes"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "6ed748e4830a43002c28",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "hecho_contratos"
+              }
+            },
+            "Property": "Valor contratado"
+          }
+        },
+        "type": "Advanced"
+      }
+    ]
   }
 }

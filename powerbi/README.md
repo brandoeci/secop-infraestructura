@@ -58,13 +58,15 @@ Ponga estas medidas en tarjetas. Si los números coinciden, el modelo cargó bie
 
 | Medida | Valor esperado |
 |---|---|
-| `Contratos` | 66.875 |
-| `Valor contratado` | 88.273.777.947.266 |
-| `Valor pagado` | 11.865.954.850.752 |
-| `% ejecutado` | 46,8 % |
-| `% sin ejecucion reportada` | 33,7 % |
+| `Contratos` | 67.299 |
+| `Valor contratado` | 93.064.372.188.138 |
+| `Valor pagado` | 12.388.092.465.348 |
+| `% ejecutado` | 47,6 % |
+| `% sin ejecucion reportada` | 33,3 % |
 | `Contratos atipicos` | 27 |
 | `Duracion promedio dias` | 188 |
+| `Km de red vial` | 22.635,1 |
+| `% de km sin superficie informada` | 83,2 % |
 
 Las cifras corresponden a la descarga del 2026-10-05. **El dataset se actualiza a diario**, así
 que si vuelve a correr el ETL los totales serán algo mayores. El número de filas de la descarga

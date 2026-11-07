@@ -23,11 +23,11 @@
                       "Entity": "hecho_contratos"
                     }
                   },
-                  "Property": "Valor contratado anio anterior"
+                  "Property": "Valor contratado"
                 }
               },
-              "queryRef": "hecho_contratos.Valor contratado anio anterior",
-              "nativeQueryRef": "Valor contratado anio anterior"
+              "queryRef": "hecho_contratos.Valor contratado",
+              "nativeQueryRef": "Valor contratado"
             }
           ]
         }
@@ -42,7 +42,7 @@
                     "Entity": "hecho_contratos"
                   }
                 },
-                "Property": "Valor contratado anio anterior"
+                "Property": "Valor contratado"
               }
             },
             "direction": "Descending"

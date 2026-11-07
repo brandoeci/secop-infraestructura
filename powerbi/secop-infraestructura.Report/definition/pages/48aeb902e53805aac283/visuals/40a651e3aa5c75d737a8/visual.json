@@ -143,5 +143,93 @@
       ]
     },
     "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "cc3427a918463e3b0e70",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "dim_entidad"
+              }
+            },
+            "Property": "nombre_entidad"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "20ad6ed2330eaa2eeed0",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "dim_entidad"
+              }
+            },
+            "Property": "departamento"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "6422abec057489101048",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "hecho_contratos"
+              }
+            },
+            "Property": "Contratos"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "9df11bca3cb7c5ae86d4",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "hecho_contratos"
+              }
+            },
+            "Property": "Valor contratado"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "b5e6436d1a498d238d8d",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "hecho_contratos"
+              }
+            },
+            "Property": "Valor pagado"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "447bf5b3000625e0852a",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "hecho_contratos"
+              }
+            },
+            "Property": "% ejecutado"
+          }
+        },
+        "type": "Advanced"
+      }
+    ]
   }
 }

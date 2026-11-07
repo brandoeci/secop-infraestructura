@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
   "name": "98ea0b03966c082b49c5",
   "position": {
-    "x": 1210,
+    "x": 1211.4994211450125,
     "y": 0,
     "z": 1000,
-    "height": 557.5,
-    "width": 1350,
+    "height": 557.56507450423862,
+    "width": 1232.1499794599843,
     "tabOrder": 1000
   },
   "visual": {
@@ -189,6 +189,20 @@
             }
           ]
         }
+      },
+      {
+        "name": "c1a11a3c0c891e8d4d62",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "hecho_contratos"
+              }
+            },
+            "Property": "Valor contratado"
+          }
+        },
+        "type": "Advanced"
       }
     ]
   }
