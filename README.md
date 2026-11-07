@@ -5,10 +5,15 @@
 Proyecto de datos de punta a punta sobre el gasto público en obra e infraestructura, con datos
 abiertos de **SECOP II**, la plataforma de contratación estatal de Colombia.
 
-**Pipeline medallion** (bronze → silver → gold) sobre un dataset de **6.102.286 contratos**,
-con claves deterministas, carga incremental, control de calidad que bloquea la publicación y
-ejecución automática en GitHub Actions. Ingesta en Python, transformación en **dbt + DuckDB**,
-informe en **Power BI**.
+**Pipeline medallion** (bronze → silver → gold) que filtra los **6.102.286 contratos** de
+SECOP II a los **67.299** de obra e infraestructura de los últimos tres años. Con ese alcance
+el dataset cabe en una sola máquina, y por eso aquí no hay Spark: la herramienta se elige por
+el volumen que hay, no por el que suena bien.
+
+Claves subrogadas deterministas, carga incremental idempotente, 75 tests que bloquean la
+publicación si algo rompe, y ejecución automática en GitHub Actions. Ingesta en Python,
+transformación en **dbt + DuckDB** —el mismo SQL probado contra **BigQuery** en cada push—,
+informe en **Power BI** con RLS.
 
 ---
 

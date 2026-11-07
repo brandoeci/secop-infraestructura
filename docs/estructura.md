@@ -267,5 +267,5 @@ Verificado contra la API el mismo día:
 | Filas | **715** (coincide con el catálogo) |
 | Columnas | **18**, no 20 |
 
-El CLAUDE.md dice "715 filas por 20 columnas". Las filas coinciden; las columnas son 18 según
-`/api/views/ie7y-asdn.json`. Conviene corregirlo en el CLAUDE.md.
+El catálogo anunciaba 20 columnas. Las filas sí coinciden, pero las columnas son **18** según
+`/api/views/ie7y-asdn.json`, que es la fuente que manda.
