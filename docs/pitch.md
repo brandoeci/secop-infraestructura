@@ -20,7 +20,7 @@ El informe, por si lo piden en la llamada:
 > de sesenta y siete mil contratos, solo doce mil cumplen los dos. Así que el universo es la
 > unión de ambos, y lo puedo defender con números en vez de con una corazonada.
 >
-> Con eso armé un **esquema en estrella** —un hecho de sesenta y siete mil contratos y siete
+> Con eso armé un **esquema en estrella** —un hecho de sesenta y siete mil contratos y ocho
 > dimensiones— con dbt sobre DuckDB, que alimenta un informe de Power BI de cinco páginas.
 >
 > Y el hallazgo que más me gusta no es de negocio, es de **calidad de datos**: al sumar el valor
