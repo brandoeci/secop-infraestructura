@@ -104,6 +104,18 @@ Sí, implementada y documentada. Un rol dinámico que resuelve el departamento d
 conectado con `USERPRINCIPALNAME()` contra una tabla puente. Un rol por departamento serían 34
 roles que hay que mantener a mano.
 
+**Probado el 2026-11-06**, no solo escrito. Con el rol activo y suplantando a
+`supervisor.antioquia@ejemplo.gov.co`, los contratos bajan de 67.299 a **7.868** y los kilómetros
+de red de 22.635,1 a **1.485,9**. Las cuatro cifras se verificaron contra el Parquet por fuera de
+Power BI.
+
+Y hay un detalle que da para conversar: el gasto por kilómetro de Antioquia pasa de
+6.754.718.018 a **6.708.848.100** al activar el rol. No es un error. Sin rol, la tabla solo está
+filtrada por la territorial (7.881 contratos); con el rol aplican **las dos** reglas —la de la
+entidad y la de la territorial— y quedan 7.868. Los 13 de diferencia son contratos de entidades
+de otro departamento que caen en la territorial de Antioquia. Que el RLS *reduzca* un promedio
+ponderado es justamente la señal de que está filtrando el hecho y no solo la dimensión.
+
 El detalle que conviene decir: filtra por el departamento **de la entidad contratante**, no por
 dónde se ejecuta la obra. En este dataset el departamento describe a la entidad. La dirección de
 ejecución existe pero es texto libre sin normalizar —2.475 valores distintos en 10.000 filas— y
