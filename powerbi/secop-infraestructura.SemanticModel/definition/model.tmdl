@@ -17,10 +17,10 @@ ref table dim_estado
 ref table dim_fecha
 ref table dim_modalidad
 ref table dim_proveedor
-ref table dim_territorial_vial
 ref table dim_tipo_contrato
 ref table hecho_contratos
 ref table mapa_usuarios
+ref table dim_territorial_vial
 
 ref role 'Supervisor regional'
 

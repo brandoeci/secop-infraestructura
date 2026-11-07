@@ -3,7 +3,7 @@
   "name": "b2f42bf244c8075b38d0",
   "position": {
     "x": 0,
-    "y": 551.66666666666674,
+    "y": 680,
     "z": 2000,
     "height": 372,
     "width": 1490,
@@ -223,6 +223,21 @@
               }
             },
             "Property": "Valor contratado"
+          }
+        },
+        "type": "Advanced",
+        "howCreated": "User"
+      },
+      {
+        "name": "0d4a6bb308bc4075b079",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "hecho_contratos"
+              }
+            },
+            "Property": "Valor contratado sin filtrar"
           }
         },
         "type": "Advanced"

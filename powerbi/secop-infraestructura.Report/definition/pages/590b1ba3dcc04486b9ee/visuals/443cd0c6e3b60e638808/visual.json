@@ -2,10 +2,10 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
   "name": "443cd0c6e3b60e638808",
   "position": {
-    "x": 1076.25,
-    "y": 77.5,
+    "x": 1033.3333333333335,
+    "y": 83.333333333333343,
     "z": 6,
-    "height": 350,
+    "height": 507.5,
     "width": 337.5,
     "tabOrder": 6
   },
@@ -63,30 +63,7 @@
           }
         ]
       }
-    },
-    "visualContainerObjects": {
-      "title": [
-        {
-          "properties": {
-            "show": {
-              "expr": {
-                "Literal": {
-                  "Value": "true"
-                }
-              }
-            },
-            "text": {
-              "expr": {
-                "Literal": {
-                  "Value": "'Contratos por departamento'"
-                }
-              }
-            }
-          }
-        }
-      ]
-    },
-    "drillFilterOtherVisuals": true
+    }
   },
   "filterConfig": {
     "filters": [

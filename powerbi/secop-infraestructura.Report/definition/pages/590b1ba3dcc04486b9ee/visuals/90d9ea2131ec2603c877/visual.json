@@ -6,7 +6,7 @@
     "y": 0,
     "z": 0,
     "height": 103.25279157485902,
-    "width": 178.9715053964223,
+    "width": 178.97150539642229,
     "tabOrder": 0
   },
   "visual": {
@@ -50,29 +50,6 @@
         ],
         "isDefaultSort": true
       }
-    },
-    "visualContainerObjects": {
-      "title": [
-        {
-          "properties": {
-            "show": {
-              "expr": {
-                "Literal": {
-                  "Value": "true"
-                }
-              }
-            },
-            "text": {
-              "expr": {
-                "Literal": {
-                  "Value": "'Contratos de infraestructura'"
-                }
-              }
-            }
-          }
-        }
-      ]
-    },
-    "drillFilterOtherVisuals": true
+    }
   }
 }

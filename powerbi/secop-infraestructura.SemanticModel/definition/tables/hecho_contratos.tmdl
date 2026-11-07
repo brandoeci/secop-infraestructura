@@ -181,15 +181,6 @@ table hecho_contratos
 
 		annotation SummarizationSetBy = Automatic
 
-	column territorial_key
-		dataType: int64
-		isHidden
-		lineageTag: 7b3e5c90-21af-4d6e-9c48-0d6f1a2b3e57
-		summarizeBy: none
-		sourceColumn: territorial_key
-
-		annotation SummarizationSetBy = Automatic
-
 	column fecha_firma_key
 		dataType: int64
 		isHidden
@@ -308,6 +299,15 @@ table hecho_contratos
 		lineageTag: 5aeb274d-aa8c-4b13-958b-15db8b95e5dd
 		summarizeBy: none
 		sourceColumn: duracion_dias
+
+		annotation SummarizationSetBy = Automatic
+
+	column territorial_key
+		dataType: int64
+		isHidden
+		lineageTag: 7b3e5c90-21af-4d6e-9c48-0d6f1a2b3e57
+		summarizeBy: none
+		sourceColumn: territorial_key
 
 		annotation SummarizationSetBy = Automatic
 

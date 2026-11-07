@@ -23,11 +23,11 @@
                       "Entity": "hecho_contratos"
                     }
                   },
-                  "Property": "Valor contratado"
+                  "Property": "Valor contratado anio anterior"
                 }
               },
-              "queryRef": "hecho_contratos.Valor contratado",
-              "nativeQueryRef": "Valor contratado"
+              "queryRef": "hecho_contratos.Valor contratado anio anterior",
+              "nativeQueryRef": "Valor contratado anio anterior"
             }
           ]
         }
@@ -42,7 +42,7 @@
                     "Entity": "hecho_contratos"
                   }
                 },
-                "Property": "Valor contratado"
+                "Property": "Valor contratado anio anterior"
               }
             },
             "direction": "Descending"
@@ -50,29 +50,6 @@
         ],
         "isDefaultSort": true
       }
-    },
-    "visualContainerObjects": {
-      "title": [
-        {
-          "properties": {
-            "show": {
-              "expr": {
-                "Literal": {
-                  "Value": "true"
-                }
-              }
-            },
-            "text": {
-              "expr": {
-                "Literal": {
-                  "Value": "'Valor contratado'"
-                }
-              }
-            }
-          }
-        }
-      ]
-    },
-    "drillFilterOtherVisuals": true
+    }
   }
 }

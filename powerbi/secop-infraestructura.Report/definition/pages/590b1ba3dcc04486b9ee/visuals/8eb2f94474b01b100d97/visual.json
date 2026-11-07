@@ -3,10 +3,10 @@
   "name": "8eb2f94474b01b100d97",
   "position": {
     "x": 357.14285714285717,
-    "y": 134.2857142857143,
+    "y": 134.28571428571431,
     "z": 5,
     "height": 471.42857142857144,
-    "width": 648.5714285714287,
+    "width": 648.57142857142867,
     "tabOrder": 5
   },
   "visual": {
@@ -69,30 +69,7 @@
         ],
         "isDefaultSort": true
       }
-    },
-    "visualContainerObjects": {
-      "title": [
-        {
-          "properties": {
-            "show": {
-              "expr": {
-                "Literal": {
-                  "Value": "true"
-                }
-              }
-            },
-            "text": {
-              "expr": {
-                "Literal": {
-                  "Value": "'Gasto por kilometro de red, por territorial'"
-                }
-              }
-            }
-          }
-        }
-      ]
-    },
-    "drillFilterOtherVisuals": true
+    }
   },
   "filterConfig": {
     "filters": [

@@ -4,5 +4,24 @@
   "displayName": "Red vial",
   "displayOption": "FitToPage",
   "height": 1080,
-  "width": 1920
+  "width": 1920,
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "2d06b39943080a0b7887",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "dim_entidad"
+              }
+            },
+            "Property": "departamento"
+          }
+        },
+        "type": "Categorical",
+        "howCreated": "User"
+      }
+    ]
+  }
 }
