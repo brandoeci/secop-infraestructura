@@ -7,8 +7,8 @@
 El orden de los pasos no es una preferencia de estilo: **es el control de
 calidad**.
 
-    1. descargar      API -> data/raw/obra.ndjson          (opcional)
-    2. aterrizar      -> data/bronze/contratos.parquet      bronze
+    1. descargar      API -> data/raw/{obra,vial}.ndjson   (opcional)
+    2. aterrizar      -> data/bronze/{contratos,red_vial}.parquet   bronze
     3. dbt build      silver y gold, y 67 tests             el gate
     4. registrar      -> auditoria_corridas.parquet         siempre, pase o falle
     5. exportar       gold -> data/curated/*.parquet        solo si 3 fue bien
@@ -32,6 +32,10 @@ import time
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
+
+# El segundo origen de bronze: la red vial de INVIAS (dataset ie7y-asdn).
+CRUDO_VIAL = RAIZ / "data" / "raw" / "vial.ndjson"
+BRONZE_VIAL = RAIZ / "data" / "bronze" / "red_vial.parquet"
 PROYECTO = RAIZ / "transformaciones"
 
 
@@ -90,10 +94,31 @@ def main() -> None:
         if python("descargar.py", *args):
             raise SystemExit("la descarga fallo")
 
+        # La red vial es estatica -715 tramos- y en una maquina que ya corrio
+        # el pipeline el Parquet sigue ahi, asi que es facil olvidarla. En un
+        # runner limpio NO existe, y sus dos tests de fuente rompen el gate:
+        #   IO Error: No files found that match "../data/bronze/red_vial.parquet"
+        # Paso el 2026-11-09 y el 2026-11-16, las dos corridas programadas.
+        # Son 715 filas: bajarla siempre que se baje de la API no cuesta nada.
+        if python("descargar.py", "--universo", "vial"):
+            raise SystemExit("la descarga de la red vial fallo")
+
     n += 1
     paso(n, "Aterrizaje en bronze")
     if python("aterrizar.py"):
         raise SystemExit("el aterrizaje fallo")
+
+    # Bronze tiene DOS origenes. El segundo solo se aterriza si su crudo
+    # existe: sin --descargar, una corrida sobre el crudo que ya hay no
+    # tiene por que exigir la red vial.
+    if CRUDO_VIAL.exists():
+        if python("aterrizar.py",
+                  "--crudo", str(CRUDO_VIAL),
+                  "--salida", str(BRONZE_VIAL),
+                  "--esquema", "vial"):
+            raise SystemExit("el aterrizaje de la red vial fallo")
+    else:
+        print(f"   aviso: no hay {CRUDO_VIAL}, se deja bronze.red_vial como este")
 
     n += 1
     paso(n, "Transformacion y control de calidad (dbt)")

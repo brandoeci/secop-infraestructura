@@ -70,6 +70,17 @@ jobs:
             python etl/descargar.py --universo obra
           fi
 
+      # Bronze tiene DOS origenes y este se olvidaba. La red vial es estatica
+      # -715 tramos-, asi que en una maquina que ya corrio el pipeline el
+      # Parquet sigue ahi y nada falla; el runner arranca limpio y no lo tiene.
+      # Sus dos tests de fuente rompian el gate:
+      #   IO Error: No files found that match "../data/bronze/red_vial.parquet"
+      # Fallaron asi las corridas programadas del 2026-11-09 y el 2026-11-16.
+      # No va con --desde: --desde acota contratos por fecha de firma y este
+      # dataset no tiene fecha ni crece.
+      - name: Descargar la red vial de INVIAS
+        run: python etl/descargar.py --universo vial
+
       - name: Correr el pipeline
         env:
           FULL_REFRESH: ${{ inputs.full_refresh }}
