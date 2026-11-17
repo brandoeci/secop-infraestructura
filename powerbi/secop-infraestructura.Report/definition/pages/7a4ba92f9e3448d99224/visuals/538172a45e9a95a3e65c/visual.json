@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
   "name": "538172a45e9a95a3e65c",
   "position": {
-    "x": 0,
-    "y": 0,
+    "x": 40,
+    "y": 540,
     "z": 0,
-    "height": 636.66666666666674,
-    "width": 840,
+    "height": 320,
+    "width": 1520,
     "tabOrder": 0
   },
   "visual": {
@@ -149,7 +149,29 @@
         }
       ]
     },
-    "drillFilterOtherVisuals": true
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Contratos marcados como atípicos'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
   },
   "filterConfig": {
     "filters": [

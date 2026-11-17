@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
   "name": "844311efdd7d13b37f74",
   "position": {
-    "x": 668.33333333333337,
-    "y": 0,
+    "x": 40,
+    "y": 232,
     "z": 1000,
-    "height": 231.42857142857144,
-    "width": 794.28571428571433,
+    "height": 288,
+    "width": 1520,
     "tabOrder": 1000
   },
   "visual": {
@@ -69,7 +69,29 @@
         ]
       }
     },
-    "drillFilterOtherVisuals": true
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Valor contratado por mes'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
   },
   "filterConfig": {
     "filters": [

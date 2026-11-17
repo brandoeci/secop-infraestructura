@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
   "name": "0b430dd9411490563d9c",
   "position": {
-    "x": 0,
-    "y": 133.75,
+    "x": 40,
+    "y": 232,
     "z": 4,
-    "height": 586.25,
-    "width": 341.25,
+    "height": 628,
+    "width": 493,
     "tabOrder": 4
   },
   "visual": {
@@ -77,6 +77,28 @@
           }
         ]
       }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Red vial por territorial'"
+                }
+              }
+            }
+          }
+        }
+      ]
     }
   },
   "filterConfig": {

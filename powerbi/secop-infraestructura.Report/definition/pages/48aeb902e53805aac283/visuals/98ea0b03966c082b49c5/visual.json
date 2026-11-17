@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
   "name": "98ea0b03966c082b49c5",
   "position": {
-    "x": 1211.4994211450125,
-    "y": 0,
+    "x": 40,
+    "y": 108,
     "z": 1000,
-    "height": 557.56507450423862,
-    "width": 1232.1499794599843,
+    "height": 366,
+    "width": 750,
     "tabOrder": 1000
   },
   "visual": {
@@ -42,11 +42,11 @@
                       "Entity": "hecho_contratos"
                     }
                   },
-                  "Property": "Valor contratado"
+                  "Property": "Contratos"
                 }
               },
-              "queryRef": "hecho_contratos.Valor contratado",
-              "nativeQueryRef": "Valor contratado"
+              "queryRef": "hecho_contratos.Contratos",
+              "nativeQueryRef": "Contratos"
             }
           ]
         }
@@ -61,7 +61,7 @@
                     "Entity": "hecho_contratos"
                   }
                 },
-                "Property": "Valor contratado"
+                "Property": "Contratos"
               }
             },
             "direction": "Descending"
@@ -74,10 +74,17 @@
       "title": [
         {
           "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Top 10 en barras'"
+                  "Value": "'Top 10 entidades por número de contratos'"
                 }
               }
             }
@@ -146,7 +153,7 @@
                                 "Source": "h"
                               }
                             },
-                            "Property": "Valor contratado"
+                            "Property": "Contratos"
                           }
                         }
                       }
@@ -199,7 +206,7 @@
                 "Entity": "hecho_contratos"
               }
             },
-            "Property": "Valor contratado"
+            "Property": "Contratos"
           }
         },
         "type": "Advanced"

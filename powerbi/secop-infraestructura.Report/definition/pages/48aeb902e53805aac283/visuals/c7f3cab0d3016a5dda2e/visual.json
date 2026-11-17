@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
   "name": "c7f3cab0d3016a5dda2e",
   "position": {
-    "x": 1208.0576614258505,
-    "y": 633.283788325802,
+    "x": 810,
+    "y": 108,
     "z": 2000,
-    "height": 512.82219815513315,
-    "width": 1235.5917391791463,
+    "height": 366,
+    "width": 750,
     "tabOrder": 2000
   },
   "visual": {
@@ -74,10 +74,17 @@
       "title": [
         {
           "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Nacional vs Territorial'"
+                  "Value": "'Valor contratado por orden de la entidad'"
                 }
               }
             }

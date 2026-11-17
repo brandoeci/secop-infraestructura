@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
   "name": "40a651e3aa5c75d737a8",
   "position": {
-    "x": 0,
-    "y": 0,
+    "x": 40,
+    "y": 494,
     "z": 0,
-    "height": 873.23943661971839,
-    "width": 1209.8591549295775,
+    "height": 366,
+    "width": 1520,
     "tabOrder": 0
   },
   "visual": {
@@ -134,7 +134,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'La tabla de entidades'"
+                  "Value": "'Entidades contratantes'"
                 }
               }
             }

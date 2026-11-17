@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
   "name": "12072b05d02d6431df46",
   "position": {
-    "x": 0,
-    "y": 268.33333333333337,
+    "x": 40,
+    "y": 540,
     "z": 0,
-    "height": 388,
-    "width": 1154,
+    "height": 320,
+    "width": 1520,
     "tabOrder": 0
   },
   "visual": {
@@ -99,7 +99,29 @@
         }
       ]
     },
-    "drillFilterOtherVisuals": true
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Contratado frente a pagado, por departamento'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
   },
   "filterConfig": {
     "filters": [

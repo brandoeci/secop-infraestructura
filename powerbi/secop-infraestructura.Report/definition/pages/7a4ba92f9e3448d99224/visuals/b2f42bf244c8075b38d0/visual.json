@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
   "name": "b2f42bf244c8075b38d0",
   "position": {
-    "x": 0,
-    "y": 680,
+    "x": 425,
+    "y": 108,
     "z": 2000,
-    "height": 372,
-    "width": 1490,
+    "height": 412,
+    "width": 1135,
     "tabOrder": 2000
   },
   "visual": {
@@ -117,7 +117,29 @@
         }
       ]
     },
-    "drillFilterOtherVisuals": true
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Valor sin filtrar frente a veces el p99 de su modalidad'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
   },
   "filterConfig": {
     "filters": [

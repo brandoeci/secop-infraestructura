@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
   "name": "a646b44760b497ab0a3e",
   "position": {
-    "x": 10,
-    "y": 20,
+    "x": 425,
+    "y": 108,
     "z": 0,
-    "height": 375,
-    "width": 596.66666666666674,
+    "height": 412,
+    "width": 1135,
     "tabOrder": 0
   },
   "visual": {
@@ -70,6 +70,28 @@
         "isDefaultSort": true
       }
     },
-    "drillFilterOtherVisuals": true
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'% ejecutado por estado del contrato'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
   }
 }
