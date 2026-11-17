@@ -1,7 +1,7 @@
 -- Ningun contrato debe superar 100.000 veces la mediana de su modalidad.
 --
 -- Es la regla que habria atrapado sola el error que se encontro a mano: un
--- contrato de minima cuantia registrado por 6,45 cuatrillones de pesos, que
+-- contrato de minima cuantia registrado por 6.454 billones de pesos, que
 -- explicaba el 98,6 % del valor del universo entero. Se tardaron horas en
 -- verlo; con este test la corrida se habria detenido en la primera.
 --

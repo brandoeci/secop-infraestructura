@@ -247,7 +247,7 @@ dentro del mismo motor.
 La medición que lo justifica: la suma exacta de los 67.299 contratos es
 `6.546.904.372.188.138,10` y la de `FLOAT64` daba `...134`. Faltaban **4,10
 pesos**, y faltaban por un solo dato: el registro corrupto de la decisión D5
-lleva el acumulado a 6,45 cuatrillones, un rango donde la distancia entre dos
+lleva el acumulado a 6.454 billones, un rango donde la distancia entre dos
 `float64` consecutivos es de un peso entero, así que los centavos de los otros
 67.298 contratos no caben. Entre los confiables el total es de 93 billones y ahí
 el `FLOAT64` es exacto: el límite son 2^53, unos 9.007 billones.

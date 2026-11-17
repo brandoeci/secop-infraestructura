@@ -143,7 +143,7 @@ documentado para poder defenderlo.
 
 El atípico se mide contra el percentil 99 de **su propia `modalidad_de_contratacion`**, no
 contra el del universo completo, porque la modalidad refleja un rango de cuantía definido por
-ley. La regla salió de un caso real: un contrato de *mínima cuantía* por 6,45 cuatrillones de
+ley. La regla salió de un caso real: un contrato de *mínima cuantía* por 6.454 billones de
 pesos, 38 millones de veces el p99 de su modalidad. Ver [`calidad-datos.md`](calidad-datos.md).
 
 ---
@@ -183,7 +183,7 @@ página de atípicos.
 
 Borrarlo habría sido más simple y habría dado el mismo total. Se descartó porque una fila que
 desaparece del modelo no deja rastro de que existió: el informe describe cómo se reporta el
-gasto público, y un registro con 6,45 cuatrillones de pesos **es** parte de cómo se reporta.
+gasto público, y un registro con 6.454 billones de pesos **es** parte de cómo se reporta.
 Marcarlo también demuestra que se detectó y se diagnosticó, en lugar de hacerlo desaparecer.
 
 La misma bandera se aplica a `fechas_coherentes` (200 filas) y `pagado_excede` (43).

@@ -68,7 +68,7 @@ en escala logarítmica porque el rango cubre cinco órdenes de magnitud en valor
 veces el p99.
 
 La primera fila de la tabla es el registro corrupto, y se lee sin explicación: `valor_confiable`
-en `False`, la columna sin filtrar en 6,45 cuatrillones y `Valor contratado` **en blanco**, porque
+en `False`, la columna sin filtrar en 6.454 billones y `Valor contratado` **en blanco**, porque
 todas las medidas de dinero lo excluyen.
 
 ### Red vial
@@ -118,7 +118,7 @@ ambos.
 
 Sumar el valor contratado daba **$6.542 billones COP**, unas cuatro veces el PIB anual de
 Colombia para tres años de obra. La causa era **un contrato** de
-**$6.453.840.000.000.000** (6,45 cuatrillones de pesos).
+**$6.453.840.000.000.000** (6.454 billones de pesos).
 
 Es un error de digitación, y tres campos del propio registro lo delatan: está clasificado como
 **mínima cuantía** (modalidad cuya mediana es $33,8 millones y su percentil 99 son $169
@@ -380,7 +380,7 @@ no deja rastro de que existió y el vacío de reporte es parte de lo que el info
 
 | Bandera | Filas |
 |---|---|
-| `valor_confiable = False` (el registro de 6,45 cuatrillones) | 1 |
+| `valor_confiable = False` (el registro de 6.454 billones) | 1 |
 | `fechas_coherentes = False` (termina antes de firmarse) | 200 |
 | `pagado_excede = True` (pagado mayor que contratado) | 43 |
 | `pago_exigible = True` (el contrato ya terminó) | 17.814 |

@@ -4,7 +4,7 @@ Un gate que avisa pero deja pasar no es un gate, y la unica forma de saber de
 que lado esta el nuestro es romperlo a proposito.
 
 La prueba inyecta en bronze un contrato con el mismo perfil del error que se
-encontro a mano en este dataset (uno de minima cuantia por 6,45 cuatrillones
+encontro a mano en este dataset (uno de minima cuantia por 6.454 billones
 de pesos, que explicaba el 98,6 % del valor total) y comprueba tres cosas:
 
   1. `dbt build` termina en error, no en aviso.

@@ -186,7 +186,7 @@ pero no llega a los Parquet del informe.
 ### El test que más vale, y los dos defectos que tuvo
 
 `valor_fuera_de_escala` es la regla que **habría atrapado sola** el error que se
-encontró a mano: un contrato de mínima cuantía registrado por 6,45 cuatrillones
+encontró a mano: un contrato de mínima cuantía registrado por 6.454 billones
 de pesos, que explicaba el 98,6 % del valor del universo entero.
 
 Sus dos primeras versiones estaban mal, y las dos las descubrió el fixture de

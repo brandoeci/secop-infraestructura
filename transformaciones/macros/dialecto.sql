@@ -60,8 +60,8 @@
 
   Medido tambien cuanto cuesta: la suma en DOUBLE de los 67.299 contratos da
   6.546.904.372.188.134 y la exacta 6.546.904.372.188.138,10. Faltan 4,10
-  pesos, y faltan porque el registro corrupto lleva el acumulado a 6,5
-  cuatrillones: ahi la distancia entre dos float64 consecutivos es de UN peso,
+  pesos, y faltan porque el registro corrupto lleva el acumulado a 6.547
+  billones: ahi la distancia entre dos float64 consecutivos es de UN peso,
   asi que los centavos no caben. Entre los 67.298 contratos confiables el
   total es de 93 billones y en ese rango el FLOAT64 es exacto.
 

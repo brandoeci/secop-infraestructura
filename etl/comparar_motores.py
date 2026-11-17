@@ -27,8 +27,8 @@ Medido el 2026-11-04: 6.546.904.372.188.142 contra 6.546.904.372.188.158,
 una diferencia relativa de 2,4e-15, justo la precision de un float de 64
 bits. Y peor: el MISMO DuckDB daba numeros distintos entre dos corridas.
 
-Lo causaba el registro corrupto de la decision D5. Ese contrato de 6,45
-cuatrillones lleva el acumulado a un rango donde la distancia entre dos
+Lo causaba el registro corrupto de la decision D5. Ese contrato de 6.454
+billones lleva el acumulado a un rango donde la distancia entre dos
 float64 consecutivos es de un peso entero, asi que los centavos de los otros
 67.298 contratos no caben. La suma exacta es 6.546.904.372.188.138,10 y la de
 FLOAT64 daba ...134: cuatro pesos con diez, perdidos por un unico dato.

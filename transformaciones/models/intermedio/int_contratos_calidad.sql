@@ -19,8 +19,8 @@ marcado as (
         *,
 
         -- Un unico registro, diagnosticado como error de digitacion en
-        -- docs/calidad-datos.md: un contrato de minima cuantia por 6,45
-        -- cuatrillones de pesos que explicaba el 98,6 % del valor total.
+        -- docs/calidad-datos.md: un contrato de minima cuantia por 6.454
+        -- billones de pesos que explicaba el 98,6 % del valor total.
         id_contrato <> '{{ var("contrato_corrupto") }}' as valor_confiable,
 
         -- True solo donde el contrato ya termino, asi que el % ejecutado se

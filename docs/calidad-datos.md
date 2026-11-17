@@ -23,7 +23,7 @@ Un único contrato:
 |---|---|
 | `id_contrato` | `CO1.PCCNTR.5972834` |
 | `nombre_entidad` | INSTITUCION EDUCATIVA ELISEO PAYAN |
-| `valor_del_contrato` | **$6.453.840.000.000.000** (6,45 cuatrillones COP) |
+| `valor_del_contrato` | **$6.453.840.000.000.000** (6.454 billones COP) |
 | `valor_pendiente_de_pago` | $6.453.840.000.000.000 |
 | `valor_pagado` | $0 |
 | `modalidad_de_contratacion` | **Mínima cuantía** |
@@ -299,8 +299,8 @@ la corrida sí se detiene.
 
 ### El control que habría ahorrado el trabajo de la sección 1
 
-`valor_fuera_de_escala` es la regla que **habría atrapado sola** el contrato de 6,45
-cuatrillones. Se tardaron horas en encontrarlo a mano; con este test la corrida se habría
+`valor_fuera_de_escala` es la regla que **habría atrapado sola** el contrato de 6.454
+billones. Se tardaron horas en encontrarlo a mano; con este test la corrida se habría
 detenido en la primera.
 
 Sus dos primeras versiones estaban mal, y las dos las descubrió el fixture de 280 filas del CI:

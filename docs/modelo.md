@@ -154,7 +154,7 @@ reporte es parte de lo que el informe describe.
 
 | Bandera | Filas | Qué marca |
 |---|---|---|
-| `valor_confiable = False` | 1 | El registro de 6,45 cuatrillones diagnosticado en [`calidad-datos.md`](calidad-datos.md). **Toda medida de dinero debe filtrar por esta bandera.** |
+| `valor_confiable = False` | 1 | El registro de 6.454 billones diagnosticado en [`calidad-datos.md`](calidad-datos.md). **Toda medida de dinero debe filtrar por esta bandera.** |
 | `fechas_coherentes = False` | 200 | El contrato termina antes de firmarse. Incluye uno con fecha de fin en el año **0206**. |
 | `pagado_excede = True` | 43 | Pagado mayor que contratado; dejaría `% ejecutado` sobre 100 %. |
 | `pago_exigible = True` | 17.814 | El contrato ya terminó, así que el pago debería estar reportado. |
